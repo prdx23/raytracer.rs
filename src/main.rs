@@ -1,0 +1,4 @@
+
+fn main() {
+    raytracer::raytrace();
+}
