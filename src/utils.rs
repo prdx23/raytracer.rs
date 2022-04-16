@@ -1,6 +1,7 @@
 pub mod color;
 pub mod vector;
 pub mod ray;
+pub mod camera;
 
 use std::fs;
 // use std::io::Write;

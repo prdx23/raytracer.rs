@@ -3,11 +3,18 @@ mod utils;
 mod objects;
 
 
-use crate::utils::color::Color;
-use crate::utils::vector::Vec3;
-use crate::utils::ray::Ray;
-use crate::objects::{Hit, world::World};
-use crate::objects::sphere::Sphere;
+use crate::utils::{
+    color::Color,
+    vector::Vec3,
+    ray::Ray,
+    camera::Camera,
+};
+
+use crate::objects::{
+    Hit, 
+    world::World,
+    sphere::Sphere,
+};
 
 
 pub fn raytrace() {
@@ -17,17 +24,8 @@ pub fn raytrace() {
     let width = 400;
     let height = (width as f64 / aspect_ratio) as usize;
 
-    // viewport
-    let viewport_height = 2.0;
-    let viewport_width = aspect_ratio * viewport_height;
-    let focal_length = 1.0;
-
     // camera
-    let origin = Vec3::zero();
-    let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-    let vertical = Vec3::new(0.0, viewport_height, 0.0);
-    let focal_vector = Vec3::new(0.0, 0.0, focal_length);
-    let lower_left = origin - (horizontal/2.0) - (vertical/2.0) - focal_vector;
+    let camera = Camera::new();
 
     // world
     let mut world = World::new();
@@ -39,17 +37,6 @@ pub fn raytrace() {
         center: Vec3::new(0.0, -100.5, -1.0),
         radius: 100.0,
     });
-    // world.add(Cube {
-    //     center: Vec3::new(0.0, 0.0, -1.0),
-    //     side1: 0.5,
-    //     side2: 0.5,
-    // });
-    // println!("{:?}", world.objects());
-    // println!("{:?}", world.objects().iter()[0]);
-
-    // for object in world.objects().iter() {
-    //     println!("{:?}", *object.center);
-    // }
 
     let mut buffer: Vec<Color> = vec![Color::new() ; width * height];
 
@@ -61,11 +48,7 @@ pub fn raytrace() {
         for w in 0..width {
             u = w as f64 / width as f64;
             v = h as f64 / height as f64;
-
-            ray = Ray {
-                origin: origin,
-                direction: lower_left + (horizontal * u) + (vertical * v),
-            };
+            ray = camera.get_ray(u, v);
 
             i = ((height - h - 1) * width) + w;
             buffer[i] = ray_color(&world, ray);

@@ -2,8 +2,6 @@
 
 use crate::Vec3;
 use crate::Ray;
-// use crate::objects::{Hit, HitDetail};
-
 use crate::objects::{Hit, HitDetail};
 
 
