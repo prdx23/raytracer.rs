@@ -3,6 +3,8 @@ use std::ops::{
     AddAssign, SubAssign, MulAssign, DivAssign,
 };
 
+use rand::Rng;
+
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec3 {
@@ -46,6 +48,21 @@ impl Vec3 {
         *self / self.len()
     }
 
+    pub fn random(min: f64, max: f64) -> Vec3 {
+        Vec3 {
+            x: rand::thread_rng().gen_range(min..max),
+            y: rand::thread_rng().gen_range(min..max),
+            z: rand::thread_rng().gen_range(min..max),
+        }
+    }
+
+    pub fn rnd_in_unit_circle() -> Vec3 {
+        loop {
+            let point = Vec3::random(-1.0, 1.0);
+            if point.sq_len() >= 1.0 { continue; }
+            return point
+        }
+    }
 }
 
 impl Add for Vec3 {

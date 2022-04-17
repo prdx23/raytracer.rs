@@ -53,4 +53,9 @@ impl HitDetail {
         if self.calc == false { panic!("face normal not calculated!") }
         self.normal
     }
+
+    pub fn point(&self) -> Vec3 {
+        if self.calc == false { panic!("face normal not calculated!") }
+        self.point
+    }
 }

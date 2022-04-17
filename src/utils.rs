@@ -4,9 +4,6 @@ pub mod ray;
 pub mod camera;
 
 use std::fs;
-// use std::io::Write;
-// use std::io::stdout;
-
 
 use crate::Color;
 
@@ -20,7 +17,6 @@ pub fn image_export(
 
     for h in 0..height {
         print!("\r Writing line {}/{} ...", h, height);
-        // stdout().flush().expect("error");
 
         for w in 0..width {
             i = (h * width) + w;

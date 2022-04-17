@@ -25,7 +25,8 @@ pub fn raytrace() {
     let aspect_ratio = 16.0 / 9.0;
     let width = 400;
     let height = (width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 100;
+    let ray_depth = 50;
 
     // camera
     let camera = Camera::new();
@@ -61,7 +62,7 @@ pub fn raytrace() {
                 v = ((h as f64) + rng.gen::<f64>()) / height as f64;
 
                 ray = camera.get_ray(u, v);
-                current_color += ray_color(&world, ray);
+                current_color += ray_color(&world, ray, ray_depth);
             }
 
             i = ((height - h - 1) * width) + w;
@@ -75,14 +76,24 @@ pub fn raytrace() {
 }
 
 
-fn ray_color(world: &World, ray: Ray) -> Vec3 {
+fn ray_color(world: &World, ray: Ray, depth: usize) -> Vec3 {
 
-    if let Some(detail) = world.hit(&ray, 0.0, f64::INFINITY) {
-        return Vec3::new(
-            (detail.normal().x + 1.0) * 0.5,
-            (detail.normal().y + 1.0) * 0.5,
-            (detail.normal().z + 1.0) * 0.5,
-        )
+    if depth <= 0 { return Vec3::zero() }
+
+    if let Some(det) = world.hit(&ray, 0.0, f64::INFINITY) {
+
+        let target = det.point() + det.normal() + Vec3::rnd_in_unit_circle();
+        let new_ray = Ray {
+            origin: det.point(),
+            direction: target - det.point(),
+        };
+
+        return ray_color(&world, new_ray, depth - 1) * 0.5
+        // return Vec3::new(
+        //     (detail.normal().x + 1.0) * 0.5,
+        //     (detail.normal().y + 1.0) * 0.5,
+        //     (detail.normal().z + 1.0) * 0.5,
+        // )
     }
 
     let unit_direction = ray.direction().unit();
