@@ -19,7 +19,7 @@ pub fn image_export(
     let mut i:usize;
 
     for h in 0..height {
-        print!("\r Writing line {} ...", h);
+        print!("\r Writing line {}/{} ...", h, height);
         // stdout().flush().expect("error");
 
         for w in 0..width {

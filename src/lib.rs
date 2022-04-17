@@ -1,4 +1,6 @@
 
+use rand::Rng;
+
 mod utils;
 mod objects;
 
@@ -23,6 +25,7 @@ pub fn raytrace() {
     let aspect_ratio = 16.0 / 9.0;
     let width = 400;
     let height = (width as f64 / aspect_ratio) as usize;
+    let samples_per_pixel = 10;
 
     // camera
     let camera = Camera::new();
@@ -43,39 +46,51 @@ pub fn raytrace() {
     let mut i;
     let mut u: f64;
     let mut v: f64;
+
     let mut ray: Ray;
+    let mut current_color: Vec3;
+    let mut rng = rand::thread_rng();
+
     for h in (0..height).rev() {
         for w in 0..width {
-            u = w as f64 / width as f64;
-            v = h as f64 / height as f64;
-            ray = camera.get_ray(u, v);
+            print!("\r Rendering line {}/{} ...", height - h - 1, height - 1);
+
+            current_color = Vec3::zero();
+            for _ in 0..samples_per_pixel {
+                u = ((w as f64) + rng.gen::<f64>()) / width as f64;
+                v = ((h as f64) + rng.gen::<f64>()) / height as f64;
+
+                ray = camera.get_ray(u, v);
+                current_color += ray_color(&world, ray);
+            }
 
             i = ((height - h - 1) * width) + w;
-            buffer[i] = ray_color(&world, ray);
+            buffer[i] = Color::normalize(current_color, samples_per_pixel);
         }
     }
+    println!();
 
     utils::image_export("image.ppm", &buffer, width, height);
     println!("\n Image exported!");
 }
 
 
-fn ray_color(world: &World, ray: Ray) -> Color {
+fn ray_color(world: &World, ray: Ray) -> Vec3 {
 
     if let Some(detail) = world.hit(&ray, 0.0, f64::INFINITY) {
-        return Color {
-            r: (((detail.normal().x + 1.0) * 0.5) * 255.0) as u8,
-            g: (((detail.normal().y + 1.0) * 0.5) * 255.0) as u8,
-            b: (((detail.normal().z + 1.0) * 0.5) * 255.0) as u8,
-        }
+        return Vec3::new(
+            (detail.normal().x + 1.0) * 0.5,
+            (detail.normal().y + 1.0) * 0.5,
+            (detail.normal().z + 1.0) * 0.5,
+        )
     }
 
     let unit_direction = ray.direction().unit();
     let t = 0.5 * (unit_direction.y + 1.0);
 
-    Color {
-        r: (utils::lerp(1.0, 0.5, t) * 255.0) as u8,
-        g: (utils::lerp(1.0, 0.7, t) * 255.0) as u8,
-        b: (utils::lerp(1.0, 1.0, t) * 255.0) as u8,
-    }
+    Vec3::new(
+        utils::lerp(1.0, 0.5, t),
+        utils::lerp(1.0, 0.7, t),
+        utils::lerp(1.0, 1.0, t),
+    )
 }
