@@ -16,10 +16,13 @@ impl Color {
     }
 
     pub fn normalize(color_vec: Vec3, samples: usize) -> Color {
+        let scale = 1.0 / samples as f64;
+
+        // gamma correction, gamma = 2.0 -> sqrt
         Color {
-            r: ((color_vec.x / samples as f64) * 255.0) as u8,
-            g: ((color_vec.y / samples as f64) * 255.0) as u8,
-            b: ((color_vec.z / samples as f64) * 255.0) as u8,
+            r: ((color_vec.x * scale).sqrt() * 255.0).clamp(0.0, 255.0) as u8,
+            g: ((color_vec.y * scale).sqrt() * 255.0).clamp(0.0, 255.0) as u8,
+            b: ((color_vec.z * scale).sqrt() * 255.0).clamp(0.0, 255.0) as u8,
         }
     }
 }

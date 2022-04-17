@@ -56,11 +56,24 @@ impl Vec3 {
         }
     }
 
-    pub fn rnd_in_unit_circle() -> Vec3 {
+    pub fn rnd_in_unit_sphere() -> Vec3 {
         loop {
             let point = Vec3::random(-1.0, 1.0);
             if point.sq_len() >= 1.0 { continue; }
             return point
+        }
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        Vec3::rnd_in_unit_sphere().unit()
+    }
+
+    pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+        let in_unit_sphere = Vec3::rnd_in_unit_sphere();
+        if in_unit_sphere.dot(normal) > 0.0 {
+            return in_unit_sphere
+        } else {
+            return -in_unit_sphere
         }
     }
 }

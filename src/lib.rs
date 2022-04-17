@@ -23,9 +23,9 @@ pub fn raytrace() {
 
     // image
     let aspect_ratio = 16.0 / 9.0;
-    let width = 400;
+    let width = 800;
     let height = (width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 30;
     let ray_depth = 50;
 
     // camera
@@ -80,9 +80,8 @@ fn ray_color(world: &World, ray: Ray, depth: usize) -> Vec3 {
 
     if depth <= 0 { return Vec3::zero() }
 
-    if let Some(det) = world.hit(&ray, 0.0, f64::INFINITY) {
-
-        let target = det.point() + det.normal() + Vec3::rnd_in_unit_circle();
+    if let Some(det) = world.hit(&ray, 0.00001, f64::INFINITY) {
+        let target = det.point() + det.normal() + Vec3::random_in_hemisphere(det.normal());
         let new_ray = Ray {
             origin: det.point(),
             direction: target - det.point(),
