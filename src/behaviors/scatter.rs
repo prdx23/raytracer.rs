@@ -8,7 +8,7 @@ use crate::behaviors::IntersectResult;
 
 pub trait Scatter {
     fn rc(self) -> Rc<dyn Scatter>;
-    fn scatter(&self, result: IntersectResult) -> Option<ScatterResult>;
+    fn scatter(&self, ray: &Ray, result: IntersectResult) -> Option<ScatterResult>;
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 }
 

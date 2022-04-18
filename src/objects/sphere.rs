@@ -52,7 +52,7 @@ impl Intersect for Sphere {
         let point = ray.at(t);
         let outward_normal = (point - self.center).unit();
         let result = IntersectResult::new(point, &ray, outward_normal);
-        self.material.scatter(result)
+        self.material.scatter(&ray, result)
     }
 
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

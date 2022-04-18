@@ -10,7 +10,7 @@ mod materials;
 use crate::utils::{ Color, Vec3, Ray, Camera, };
 use crate::behaviors::{ Scatter, };
 use crate::objects::{ World, Sphere, };
-use crate::materials::{ Lambertian, };
+use crate::materials::{ Lambertian, Metal };
 
 
 pub fn raytrace() {
@@ -19,32 +19,41 @@ pub fn raytrace() {
     let aspect_ratio = 16.0 / 9.0;
     let width = 400;
     let height = (width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel = 30;
+    let samples_per_pixel = 10;
     let ray_depth = 50;
 
     // camera
     let camera = Camera::new();
 
     // materials
-    // let diffuse_material: Rc<dyn Scatter> = Rc::new(Lambertian::grey());
-    let diffuse_material = Lambertian::grey().rc();
+    let diffuse_mat = Lambertian::new(Color::rgb(178, 76, 76)).rc();
 
     // world
     let mut world = World::new();
     world.add(Sphere {
         center: Vec3::new(0.0, 0.0, -1.0),
         radius: 0.5,
-        material: Rc::clone(&diffuse_material),
+        material: Rc::clone(&diffuse_mat),
     });
     world.add(Sphere {
         center: Vec3::new(0.0, -100.5, -1.0),
         radius: 100.0,
-        material: Rc::clone(&diffuse_material),
+        material: Lambertian::new(Color::rgb(204, 204, 0)).rc(),
+    });
+    world.add(Sphere {
+        center: Vec3::new(-1.0, 0.0, -1.0),
+        radius: 0.5,
+        material: Metal::new(Color::rgb(204, 204, 204), 0.0).rc(),
+    });
+    world.add(Sphere {
+        center: Vec3::new(1.0, 0.0, -1.0),
+        radius: 0.5,
+        material: Metal::new(Color::rgb(204, 153, 51), 0.5).rc(),
     });
     println!("{:#?}", &world);
 
     // pixel buffer
-    let mut buffer: Vec<Color> = vec![Color::new() ; width * height];
+    let mut buffer: Vec<Color> = vec![Color::black() ; width * height];
 
 
     let mut i;
@@ -69,7 +78,7 @@ pub fn raytrace() {
             }
 
             i = ((height - h - 1) * width) + w;
-            buffer[i] = Color::normalize(current_color, samples_per_pixel);
+            buffer[i] = Color::to_u8(current_color, samples_per_pixel);
         }
     }
     println!();

@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use crate::Vec3;
 use crate::Ray;
+use crate::Color;
 use crate::behaviors::{Scatter, ScatterResult, IntersectResult};
 
 
@@ -13,10 +14,13 @@ pub struct Lambertian {
 
 
 impl Lambertian {
+
+    pub fn new(color: Color) -> Self {
+        Self { albedo: color.normalize() }
+    }
+
     pub fn grey() -> Self {
-        Self {
-            albedo: Vec3::new(0.5, 0.5, 0.5),
-        }
+        Self { albedo: Vec3::new(0.5, 0.5, 0.5) }
     }
 }
 
@@ -25,12 +29,20 @@ impl Scatter for Lambertian {
 
     fn rc(self) -> Rc<dyn Scatter> { Rc::new(self) }
 
-    fn scatter(&self, result: IntersectResult) -> Option<ScatterResult> {
+    fn scatter(&self, _: &Ray, result: IntersectResult) -> Option<ScatterResult> {
 
         let rnd_vector = Vec3::random_in_hemisphere(result.normal);
-        let reflected_ray = Ray {
-            origin: result.point,
-            direction: result.normal + rnd_vector,
+
+        let reflect_dir = result.normal + rnd_vector;
+        let reflected_ray = match reflect_dir.near_zero() {
+            true => Ray {
+                origin: result.point,
+                direction: result.normal,
+            },
+            false => Ray {
+                origin: result.point,
+                direction: reflect_dir,
+            },
         };
 
         Some(ScatterResult {
