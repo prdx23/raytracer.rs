@@ -1,7 +1,10 @@
+use std::fmt;
+use std::rc::Rc;
 
 use crate::Vec3;
 use crate::Ray;
-use crate::objects::{Hit, HitDetail};
+use crate::behaviors::{Intersect, IntersectResult};
+use crate::behaviors::{Scatter, ScatterResult};
 
 
 // #[derive(Debug, Clone, Copy)]
@@ -9,16 +12,18 @@ use crate::objects::{Hit, HitDetail};
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
+    pub material: Rc<dyn Scatter>,
 }
 
-impl Sphere {
-    // pub fn new(center: Vec3, radius: f64) -> Sphere {
-    //     Sphere { center: center, radius: radius }
-    // }
-}
+// impl Sphere {
+//     pub fn new(center: Vec3, radius: f64) -> Sphere {
+//         Sphere { center: center, radius: radius }
+//     }
+// }
 
-impl Hit for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitDetail> {
+impl Intersect for Sphere {
+
+    fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<f64> {
         let oc = ray.origin() - self.center;
         let a = ray.direction().sq_len();
         let half_b = oc.dot(ray.direction());
@@ -38,15 +43,19 @@ impl Hit for Sphere {
             }
         }
 
-        // Note: can optimize 
-        // only calc normal after nearest is found
+        Some(root)
+    }
 
-        let point = ray.at(root);
+    fn get_intersect_result(&self, ray: &Ray, t: f64)
+        -> Option<ScatterResult>
+    {
+        let point = ray.at(t);
         let outward_normal = (point - self.center).unit();
+        let result = IntersectResult::new(point, &ray, outward_normal);
+        self.material.scatter(result)
+    }
 
-        let mut detail = HitDetail::new(root, point);
-        detail.calc_face_normal(ray, outward_normal);
-
-        Some(detail)
+    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }

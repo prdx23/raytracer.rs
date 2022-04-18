@@ -1,13 +1,12 @@
-// use std::fmt;
 
-use crate::Vec3;
 use crate::Ray;
-use crate::objects::{Hit, HitDetail};
+use crate::behaviors::{Intersect};
+use crate::behaviors::{ScatterResult};
 
 
-// #[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct World {
-    objects: Vec<Box<dyn Hit>>,
+    objects: Vec<Box<dyn Intersect>>,
 }
 
 
@@ -17,40 +16,31 @@ impl World {
         World { objects: Vec::new() }
     }
 
-    // pub fn objects(&self) -> &Vec<Box<dyn Hit>> {
-    //     &self.objects
-    // }
-
-    pub fn add(&mut self, object: impl Hit + 'static) {
+    pub fn add(&mut self, object: impl Intersect + 'static) {
         self.objects.push(Box::new(object));
     }
 }
 
-impl Hit for World {
+impl World {
 
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitDetail> {
+    pub fn find_intersection(&self, ray: &Ray, t_min: f64, t_max: f64)
+        -> Option<ScatterResult>
+    {
 
         let mut hit_anything = false;
-        let mut closest_so_far = t_max;
-        let mut final_detail = HitDetail::new(0.0, Vec3::zero());
+        let mut closest_t = t_max;
+        let mut closest_obj_index = 0;
 
-        for object in self.objects.iter() {
-            if let Some(detail) = object.hit(ray, t_min, closest_so_far) {
+        for (i, object) in self.objects.iter().enumerate() {
+            if let Some(t) = object.intersect(ray, t_min, closest_t) {
                 hit_anything = true;
-                closest_so_far = detail.t;
-                final_detail = detail;
+                closest_t = t;
+                closest_obj_index = i;
             }
         }
+        if !hit_anything { return None }
 
-        return match hit_anything {
-            true => Some(final_detail),
-            false => None,
-        }
+        let obj = &self.objects[closest_obj_index];
+        obj.get_intersect_result(&ray, closest_t)
     }
 }
-
-// impl fmt::Debug for World {
-//     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-//         fmt.debug_list().entries(self.objects.iter()).finish()
-//     }
-// }

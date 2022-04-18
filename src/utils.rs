@@ -1,11 +1,14 @@
+use std::fs;
+
 pub mod color;
 pub mod vector;
 pub mod ray;
 pub mod camera;
 
-use std::fs;
-
-use crate::Color;
+pub use color::Color;
+pub use vector::Vec3;
+pub use ray::Ray;
+pub use camera::Camera;
 
 
 pub fn image_export(

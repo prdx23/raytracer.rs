@@ -1,29 +1,23 @@
-
+use std::rc::Rc;
 use rand::Rng;
 
 mod utils;
+mod behaviors;
 mod objects;
+mod materials;
 
 
-use crate::utils::{
-    color::Color,
-    vector::Vec3,
-    ray::Ray,
-    camera::Camera,
-};
-
-use crate::objects::{
-    Hit, 
-    world::World,
-    sphere::Sphere,
-};
+use crate::utils::{ Color, Vec3, Ray, Camera, };
+use crate::behaviors::{ Scatter, };
+use crate::objects::{ World, Sphere, };
+use crate::materials::{ Lambertian, };
 
 
 pub fn raytrace() {
 
     // image
     let aspect_ratio = 16.0 / 9.0;
-    let width = 800;
+    let width = 400;
     let height = (width as f64 / aspect_ratio) as usize;
     let samples_per_pixel = 30;
     let ray_depth = 50;
@@ -31,18 +25,27 @@ pub fn raytrace() {
     // camera
     let camera = Camera::new();
 
+    // materials
+    // let diffuse_material: Rc<dyn Scatter> = Rc::new(Lambertian::grey());
+    let diffuse_material = Lambertian::grey().rc();
+
     // world
     let mut world = World::new();
     world.add(Sphere {
         center: Vec3::new(0.0, 0.0, -1.0),
         radius: 0.5,
+        material: Rc::clone(&diffuse_material),
     });
     world.add(Sphere {
         center: Vec3::new(0.0, -100.5, -1.0),
         radius: 100.0,
+        material: Rc::clone(&diffuse_material),
     });
+    println!("{:#?}", &world);
 
+    // pixel buffer
     let mut buffer: Vec<Color> = vec![Color::new() ; width * height];
+
 
     let mut i;
     let mut u: f64;
@@ -80,14 +83,8 @@ fn ray_color(world: &World, ray: Ray, depth: usize) -> Vec3 {
 
     if depth <= 0 { return Vec3::zero() }
 
-    if let Some(det) = world.hit(&ray, 0.00001, f64::INFINITY) {
-        let target = det.point() + det.normal() + Vec3::random_in_hemisphere(det.normal());
-        let new_ray = Ray {
-            origin: det.point(),
-            direction: target - det.point(),
-        };
-
-        return ray_color(&world, new_ray, depth - 1) * 0.5
+    if let Some(r) = world.find_intersection(&ray, 0.00001, f64::INFINITY) {
+        return r.attenuation * ray_color(&world, r.ray, depth - 1)
         // return Vec3::new(
         //     (detail.normal().x + 1.0) * 0.5,
         //     (detail.normal().y + 1.0) * 0.5,

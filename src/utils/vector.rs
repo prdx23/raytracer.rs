@@ -49,10 +49,11 @@ impl Vec3 {
     }
 
     pub fn random(min: f64, max: f64) -> Vec3 {
+        let mut rng = rand::thread_rng();
         Vec3 {
-            x: rand::thread_rng().gen_range(min..max),
-            y: rand::thread_rng().gen_range(min..max),
-            z: rand::thread_rng().gen_range(min..max),
+            x: rng.gen_range(min..max),
+            y: rng.gen_range(min..max),
+            z: rng.gen_range(min..max),
         }
     }
 
@@ -64,9 +65,9 @@ impl Vec3 {
         }
     }
 
-    pub fn random_unit_vector() -> Vec3 {
-        Vec3::rnd_in_unit_sphere().unit()
-    }
+    // pub fn random_unit_vector() -> Vec3 {
+    //     Vec3::rnd_in_unit_sphere().unit()
+    // }
 
     pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
         let in_unit_sphere = Vec3::rnd_in_unit_sphere();
@@ -143,6 +144,33 @@ impl MulAssign<f64> for Vec3 {
         };
     }
 }
+
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+    fn mul(self, other: Vec3) -> Vec3 {
+        Vec3 {
+            x: self * other.x, y: self * other.y, z: self * other.z
+        }
+    }
+}
+
+impl Mul<Vec3> for Vec3 {
+    type Output = Self;
+    fn mul(self, other: Vec3) -> Self {
+        Self {
+            x: self.x * other.x, y: self.y * other.y, z: self.z * other.z
+        }
+    }
+}
+
+impl MulAssign<Vec3> for Vec3 {
+    fn mul_assign(&mut self, other: Vec3) {
+        *self = Self {
+            x: self.x * other.x, y: self.y * other.y, z: self.z * other.z
+        };
+    }
+}
+
 
 impl Div<f64> for Vec3 {
     type Output = Self;
@@ -229,6 +257,26 @@ mod tests {
     }
 
     #[test]
+    fn vector_mul_rev() {
+        let vector1 = Vec3::new(1.0, 2.0, 3.0);
+        assert_eq!(Vec3 { x:2.0, y:4.0, z:6.0 }, 2.0 * vector1);
+    }
+
+    #[test]
+    fn vector_mul_vector() {
+        let vector1 = Vec3::new(1.0, 2.0, 3.0);
+        let vector2 = Vec3::new(4.0, 5.0, 6.0);
+        assert_eq!(Vec3 { x:4.0, y:10.0, z:18.0 }, vector1 * vector2);
+    }
+
+    #[test]
+    fn vector_mul_assign_vector() {
+        let mut vector1 = Vec3::new(1.0, 2.0, 3.0);
+        vector1 *= Vec3::new(4.0, 5.0, 6.0);
+        assert_eq!(Vec3 { x:4.0, y:10.0, z:18.0 }, vector1);
+    }
+
+    #[test]
     fn vector_div() {
         let vector1 = Vec3::new(2.0, 4.0, 6.0);
         assert_eq!(Vec3 { x:1.0, y:2.0, z:3.0 }, vector1 / 2.0);
@@ -262,6 +310,7 @@ mod tests {
         assert_eq!((14.0 as f64).sqrt(), vector1.len());
     }
 
+    // needs float compare with <= e
     // #[test]
     // fn vector_unit() {
     //     let vector1 = Vec3::new(1.0, 2.0, 3.0);
