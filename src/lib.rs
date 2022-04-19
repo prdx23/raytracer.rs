@@ -17,16 +17,23 @@ pub fn raytrace() {
 
     // image
     let aspect_ratio = 16.0 / 9.0;
-    let width = 400;
+    let width = 1800;
     let height = (width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel = 10;
-    let ray_depth = 50;
+    let samples_per_pixel = 250;
+    let ray_depth = 250;
 
     // camera
-    let camera = Camera::new();
+    let look_from = Vec3::new(7.0, 1.3, 3.2);
+    let look_at = Vec3::new(0.0, 0.0, -1.0);
+    let camera = Camera::new(
+        look_from, look_at,
+        Vec3::new(0.0, 1.0, 0.0),
+        15.0, aspect_ratio,
+        0.7, (look_from - look_at).len(),
+    );
 
     // materials
-    let diffuse_mat = Lambertian::new(Color::rgb(178, 76, 76)).rc();
+    let diffuse_mat = Lambertian::new(Color::rgb(218, 76, 76)).rc();
 
     // world
     let mut world = World::new();
@@ -38,17 +45,24 @@ pub fn raytrace() {
     world.add(Sphere {
         center: Vec3::new(0.0, -100.5, -1.0),
         radius: 100.0,
-        material: Lambertian::new(Color::rgb(204, 204, 0)).rc(),
+        // material: Lambertian::new(Color::rgb(204, 204, 0)).rc(),
+        material: Lambertian::grey().rc(),
     });
     world.add(Sphere {
-        center: Vec3::new(-1.0, 0.0, -1.0),
+        center: Vec3::new(-1.3, 0.0, -1.0),
         radius: 0.5,
         material: Metal::new(Color::rgb(204, 204, 204), 0.0).rc(),
     });
     world.add(Sphere {
-        center: Vec3::new(1.0, 0.0, -1.0),
-        radius: 0.5,
-        material: Metal::new(Color::rgb(204, 153, 51), 0.5).rc(),
+        center: Vec3::new(1.2, -0.1, -1.0),
+        radius: 0.4,
+        // material: Metal::new(Color::rgb(204, 204, 204), 0.0).rc(),
+        material: Lambertian::new(Color::rgb(76, 76, 218)).rc(),
+    });
+    world.add(Sphere {
+        center: Vec3::new(-0.6, -0.3, -0.5),
+        radius: 0.2,
+        material: Metal::new(Color::rgb(15, 151, 204), 0.3).rc(),
     });
     println!("{:#?}", &world);
 

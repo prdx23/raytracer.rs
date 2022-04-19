@@ -41,7 +41,7 @@ impl Scatter for Metal {
         let reflect_dir = Vec3::reflect(ray.direction.unit(), result.normal);
         let reflected_ray = Ray {
             origin: result.point,
-            direction: reflect_dir + self.fuzz * Vec3::random_in_unit_sphere(),
+            direction: reflect_dir + (self.fuzz * Vec3::random_in_hemisphere(result.normal)),
         };
 
         match reflected_ray.direction.dot(result.normal) > 0.0 {

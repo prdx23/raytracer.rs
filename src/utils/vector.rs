@@ -74,6 +74,16 @@ impl Vec3 {
         }
     }
 
+    pub fn random_in_unit_disc() -> Vec3 {
+        loop {
+            let rnd = Vec3::random(-1.0, 1.0);
+            let point = Vec3::new(rnd.x, rnd.y, 0.0);
+            if point.sq_len() >= 1.0 { continue; }
+            return point
+        }
+    }
+
+
     // pub fn random_unit_vector() -> Vec3 {
     //     Vec3::rnd_in_unit_sphere().unit()
     // }
