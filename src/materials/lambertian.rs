@@ -31,9 +31,14 @@ impl Scatter for Lambertian {
 
     fn scatter(&self, _: &Ray, result: IntersectResult) -> Option<ScatterResult> {
 
-        let rnd_vector = Vec3::random_in_hemisphere(result.normal);
+        // hemisphere diffusion
+        // let rnd_vector = Vec3::random_in_hemisphere(result.normal);
+        // let reflect_dir = rnd_vector;
 
+        // unit sphere approx diffusion
+        let rnd_vector = Vec3::random_in_unit_sphere().unit();
         let reflect_dir = result.normal + rnd_vector;
+
         let reflected_ray = match reflect_dir.near_zero() {
             true => Ray {
                 origin: result.point,

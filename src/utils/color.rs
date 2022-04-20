@@ -36,6 +36,11 @@ impl Color {
         //     g: ((color_vec.y * scale).sqrt() * 255.0).clamp(0.0, 255.0) as u8,
         //     b: ((color_vec.z * scale).sqrt() * 255.0).clamp(0.0, 255.0) as u8,
         // }
+        // Color {
+        //     r: ((color_vec.x * scale).powf(1.0 / 2.5) * 255.0) as u8,
+        //     g: ((color_vec.y * scale).powf(1.0 / 2.5) * 255.0) as u8,
+        //     b: ((color_vec.z * scale).powf(1.0 / 2.5) * 255.0) as u8,
+        // }
         Color {
             r: ((color_vec.x * scale).sqrt() * 255.0) as u8,
             g: ((color_vec.y * scale).sqrt() * 255.0) as u8,

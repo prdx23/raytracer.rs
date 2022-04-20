@@ -17,10 +17,10 @@ pub fn raytrace() {
 
     // image
     let aspect_ratio = 16.0 / 9.0;
-    let width = 1800;
+    let width = 800;
     let height = (width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel = 250;
-    let ray_depth = 250;
+    let samples_per_pixel = 10;
+    let ray_depth = 50;
 
     // camera
     let look_from = Vec3::new(7.0, 1.3, 3.2);
@@ -29,7 +29,7 @@ pub fn raytrace() {
         look_from, look_at,
         Vec3::new(0.0, 1.0, 0.0),
         15.0, aspect_ratio,
-        0.7, (look_from - look_at).len(),
+        0.0, (look_from - look_at).len(),
     );
 
     // materials
@@ -106,7 +106,7 @@ fn ray_color(world: &World, ray: Ray, depth: usize) -> Vec3 {
 
     if depth <= 0 { return Vec3::zero() }
 
-    if let Some(r) = world.find_intersection(&ray, 0.00001, f64::INFINITY) {
+    if let Some(r) = world.find_intersection(&ray, 0.0001, f64::INFINITY) {
         return r.attenuation * ray_color(&world, r.ray, depth - 1)
         // return Vec3::new(
         //     (detail.normal().x + 1.0) * 0.5,
