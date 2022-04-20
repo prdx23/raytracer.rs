@@ -33,25 +33,25 @@ impl Scatter for Lambertian {
 
         // hemisphere diffusion
         // let rnd_vector = Vec3::random_in_hemisphere(result.normal);
-        // let reflect_dir = rnd_vector;
+        // let scatter_dir = rnd_vector;
 
         // unit sphere approx diffusion
         let rnd_vector = Vec3::random_in_unit_sphere().unit();
-        let reflect_dir = result.normal + rnd_vector;
+        let scatter_dir = result.normal + rnd_vector;
 
-        let reflected_ray = match reflect_dir.near_zero() {
+        let scattered_ray = match scatter_dir.near_zero() {
             true => Ray {
                 origin: result.point,
                 direction: result.normal,
             },
             false => Ray {
                 origin: result.point,
-                direction: reflect_dir,
+                direction: scatter_dir,
             },
         };
 
         Some(ScatterResult {
-            ray: reflected_ray,
+            ray: scattered_ray,
             attenuation: self.albedo,
         })
     }

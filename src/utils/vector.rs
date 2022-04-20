@@ -57,6 +57,14 @@ impl Vec3 {
         vector - 2.0 * vector.dot(normal) * normal
     }
 
+    pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
+        let cos_theta = (-uv).dot(n).min(1.0);
+        let r_perp = etai_over_etat * (uv + cos_theta * n);
+        let r_parallel = -(1.0 - r_perp.sq_len()).abs().sqrt() * n;
+
+        r_perp + r_parallel
+    }
+
     pub fn random(min: f64, max: f64) -> Vec3 {
         let mut rng = rand::thread_rng();
         Vec3 {

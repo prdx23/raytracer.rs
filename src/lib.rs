@@ -10,7 +10,7 @@ mod materials;
 use crate::utils::{ Color, Vec3, Ray, Camera, };
 use crate::behaviors::{ Scatter, };
 use crate::objects::{ World, Sphere, };
-use crate::materials::{ Lambertian, Metal };
+use crate::materials::{ Lambertian, Metal, Dielectric };
 
 
 pub fn raytrace() {
@@ -63,6 +63,11 @@ pub fn raytrace() {
         center: Vec3::new(-0.6, -0.3, -0.5),
         radius: 0.2,
         material: Metal::new(Color::rgb(15, 151, 204), 0.3).rc(),
+    });
+    world.add(Sphere {
+        center: Vec3::new(1.2, 0.6, -1.0),
+        radius: 0.3,
+        material: Dielectric::new(1.5).rc(),
     });
     println!("{:#?}", &world);
 
