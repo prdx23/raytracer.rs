@@ -10,6 +10,7 @@ pub trait Scatter {
     fn rc(self) -> Rc<dyn Scatter>;
     fn scatter(&self, ray: &Ray, result: IntersectResult) -> Option<ScatterResult>;
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
+    fn emit(&self) -> Vec3 { Vec3::zero() }
 }
 
 impl fmt::Debug for dyn Scatter {

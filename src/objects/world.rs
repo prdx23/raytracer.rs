@@ -1,12 +1,13 @@
 
 use crate::Ray;
 use crate::behaviors::{Intersect};
-use crate::behaviors::{ScatterResult};
+// use crate::behaviors::{Intersect, Scatter};
+// use crate::behaviors::{IntersectResult, ScatterResult};
 
 
 #[derive(Debug)]
 pub struct World {
-    objects: Vec<Box<dyn Intersect>>,
+    pub objects: Vec<Box<dyn Intersect>>,
 }
 
 
@@ -24,7 +25,7 @@ impl World {
 impl World {
 
     pub fn find_intersection(&self, ray: &Ray, t_min: f64, t_max: f64)
-        -> Option<ScatterResult>
+        -> Option<(usize, f64)>
     {
 
         let mut hit_anything = false;
@@ -40,7 +41,6 @@ impl World {
         }
         if !hit_anything { return None }
 
-        let obj = &self.objects[closest_obj_index];
-        obj.get_intersect_result(&ray, closest_t)
+        Some((closest_obj_index, closest_t))
     }
 }

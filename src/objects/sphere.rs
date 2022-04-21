@@ -3,8 +3,7 @@ use std::rc::Rc;
 
 use crate::Vec3;
 use crate::Ray;
-use crate::behaviors::{Intersect, IntersectResult};
-use crate::behaviors::{Scatter, ScatterResult};
+use crate::behaviors::{Intersect, Scatter};
 
 
 // #[derive(Debug, Clone, Copy)]
@@ -46,16 +45,17 @@ impl Intersect for Sphere {
         Some(root)
     }
 
-    fn get_intersect_result(&self, ray: &Ray, t: f64)
-        -> Option<ScatterResult>
-    {
+    fn get_intersect_normal(&self, ray: &Ray, t: f64) -> Vec3 {
         let point = ray.at(t);
         let outward_normal = (point - self.center).unit();
-        let result = IntersectResult::new(point, &ray, outward_normal);
-        self.material.scatter(&ray, result)
+        outward_normal
     }
 
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
+    }
+
+    fn material(&self) -> &Rc<dyn Scatter> {
+        &self.material
     }
 }

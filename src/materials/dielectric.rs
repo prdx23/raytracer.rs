@@ -3,7 +3,6 @@ use std::rc::Rc;
 
 use crate::Vec3;
 use crate::Ray;
-use crate::Color;
 use crate::behaviors::{Scatter, ScatterResult, IntersectResult};
 
 use rand::Rng;
