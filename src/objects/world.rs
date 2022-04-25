@@ -1,13 +1,13 @@
 
 use crate::Ray;
 use crate::behaviors::{Intersect};
-// use crate::behaviors::{Intersect, Scatter};
-// use crate::behaviors::{IntersectResult, ScatterResult};
+
+use crate::objects::Object;
 
 
 #[derive(Debug)]
 pub struct World {
-    pub objects: Vec<Box<dyn Intersect>>,
+    pub objects: Vec<Object>,
 }
 
 
@@ -17,8 +17,8 @@ impl World {
         World { objects: Vec::new() }
     }
 
-    pub fn add(&mut self, object: impl Intersect + 'static) {
-        self.objects.push(Box::new(object));
+    pub fn add(&mut self, object: Object) {
+        self.objects.push(object);
     }
 }
 

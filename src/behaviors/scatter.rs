@@ -1,23 +1,16 @@
-use std::fmt;
-use std::rc::Rc;
+use enum_dispatch::enum_dispatch;
 
 use crate::Vec3;
 use crate::Ray;
 use crate::behaviors::IntersectResult;
 
 
+#[enum_dispatch(Material)]
 pub trait Scatter {
-    fn rc(self) -> Rc<dyn Scatter>;
     fn scatter(&self, ray: &Ray, result: IntersectResult) -> Option<ScatterResult>;
-    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
     fn emit(&self) -> Vec3 { Vec3::zero() }
 }
 
-impl fmt::Debug for dyn Scatter {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.repr(f)
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct ScatterResult {

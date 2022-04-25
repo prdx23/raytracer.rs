@@ -1,10 +1,10 @@
-use std::fmt;
-use std::rc::Rc;
 
 use crate::Vec3;
 use crate::Ray;
 use crate::Color;
 use crate::behaviors::{Scatter, ScatterResult, IntersectResult};
+
+use crate::materials::Material;
 
 
 #[derive(Debug, Clone)]
@@ -15,19 +15,18 @@ pub struct Lambertian {
 
 impl Lambertian {
 
-    pub fn new(color: Color) -> Self {
-        Self { albedo: color.normalize() }
+    pub fn new(color: Color) -> Material {
+        Self { albedo: color.normalize() }.into()
     }
 
-    pub fn grey() -> Self {
-        Self { albedo: Vec3::new(0.5, 0.5, 0.5) }
+    pub fn grey() -> Material {
+        Self { albedo: Vec3::new(0.5, 0.5, 0.5) }.into()
     }
+
 }
 
 
 impl Scatter for Lambertian {
-
-    fn rc(self) -> Rc<dyn Scatter> { Rc::new(self) }
 
     fn scatter(&self, _: &Ray, result: IntersectResult) -> Option<ScatterResult> {
 
@@ -54,10 +53,6 @@ impl Scatter for Lambertian {
             ray: scattered_ray,
             attenuation: self.albedo,
         })
-    }
-
-    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
     }
 
 }

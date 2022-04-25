@@ -1,17 +1,17 @@
-use std::fmt;
-use std::rc::Rc;
 
 use crate::Vec3;
 use crate::Ray;
-use crate::behaviors::{Intersect, Scatter};
+use crate::behaviors::{Intersect};
+
+use crate::materials::Material;
 
 
 // #[derive(Debug, Clone, Copy)]
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
-    pub material: Rc<dyn Scatter>,
+    pub material: Material,
 }
 
 // impl Sphere {
@@ -51,11 +51,7 @@ impl Intersect for Sphere {
         outward_normal
     }
 
-    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-
-    fn material(&self) -> &Rc<dyn Scatter> {
+    fn material(&self) -> &Material {
         &self.material
     }
 }

@@ -1,11 +1,10 @@
-use std::fmt;
-use std::rc::Rc;
 
 use crate::Vec3;
 use crate::Ray;
 use crate::Color;
 use crate::behaviors::{Scatter, ScatterResult, IntersectResult};
 
+use crate::materials::Material;
 
 #[derive(Debug, Clone)]
 pub struct Metal {
@@ -16,25 +15,23 @@ pub struct Metal {
 
 impl Metal {
 
-    pub fn new(color: Color, fuzz: f64) -> Self {
+    pub fn new(color: Color, fuzz: f64) -> Material {
         Self {
             albedo: color.normalize(),
             fuzz: if fuzz < 1.0 { fuzz } else { 1.0 }
-        }
+        }.into()
     }
 
-    pub fn grey(fuzz: f64) -> Self {
+    pub fn grey(fuzz: f64) -> Material {
         Self {
             albedo: Vec3::new(0.5, 0.5, 0.5),
             fuzz: if fuzz < 1.0 { fuzz } else { 1.0 }
-        }
+        }.into()
     }
 }
 
 
 impl Scatter for Metal {
-
-    fn rc(self) -> Rc<dyn Scatter> { Rc::new(self) }
 
     fn scatter(&self, ray: &Ray, result: IntersectResult) -> Option<ScatterResult> {
 
@@ -60,10 +57,6 @@ impl Scatter for Metal {
             }),
             false => None,
         }
-    }
-
-    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
     }
 
 }

@@ -1,11 +1,12 @@
-use std::fmt;
-use std::rc::Rc;
 
 use crate::Vec3;
 use crate::Ray;
 use crate::behaviors::{Scatter, ScatterResult, IntersectResult};
 
 use rand::Rng;
+
+use crate::materials::Material;
+
 
 #[derive(Debug, Clone)]
 pub struct Dielectric {
@@ -14,15 +15,13 @@ pub struct Dielectric {
 
 
 impl Dielectric {
-    pub fn new(ir: f64) -> Self {
-        Self { refraction_index: ir }
+    pub fn new(ir: f64) -> Material {
+        Self { refraction_index: ir }.into()
     }
 }
 
 
 impl Scatter for Dielectric {
-
-    fn rc(self) -> Rc<dyn Scatter> { Rc::new(self) }
 
     fn scatter(&self, ray: &Ray, result: IntersectResult) -> Option<ScatterResult> {
 
@@ -50,10 +49,6 @@ impl Scatter for Dielectric {
             ray: Ray { origin: result.point, direction: dir },
             attenuation: Vec3::new(1.0, 1.0, 1.0),
         })
-    }
-
-    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
     }
 
 }
