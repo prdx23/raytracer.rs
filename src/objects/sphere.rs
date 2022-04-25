@@ -11,7 +11,7 @@ use crate::materials::Material;
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
-    pub material: Material,
+    pub material: usize,
 }
 
 // impl Sphere {
@@ -51,7 +51,7 @@ impl Intersect for Sphere {
         outward_normal
     }
 
-    fn material(&self) -> &Material {
-        &self.material
+    fn material<'a>(&self, materials: &'a Vec<Material>) -> &'a Material {
+        &materials[self.material]
     }
 }

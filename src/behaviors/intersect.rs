@@ -11,7 +11,7 @@ pub trait Intersect {
 
     fn get_intersect_normal(&self, ray: &Ray, t: f64) -> Vec3;
 
-    fn material(&self) -> &Material;
+    fn material<'a>(&self, materials: &'a Vec<Material>) -> &'a Material;
 }
 
 
