@@ -8,7 +8,7 @@ mod materials;
 
 use crate::utils::{ Color, Vec3, Ray, Camera, };
 use crate::behaviors::{ Intersect, Scatter, IntersectResult };
-use crate::objects::{ World, Sphere, };
+use crate::objects::{ World, Sphere, Triangle };
 use crate::materials::{ Material, Lambertian, Metal, Dielectric, DiffuseLight };
 
 
@@ -16,9 +16,9 @@ pub fn raytrace() {
 
     // image
     let aspect_ratio = 16.0 / 9.0;
-    let width = 800;
+    let width = 400;
     let height = (width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 10;
     let ray_depth = 50;
 
     // camera
@@ -28,7 +28,7 @@ pub fn raytrace() {
         look_from, look_at,
         Vec3::new(0.0, 1.0, 0.0),
         15.0, aspect_ratio,
-        0.3, (look_from - look_at).len(),
+        0.0, (look_from - look_at).len(),
     );
 
     let materials: Vec<Material> = vec![
@@ -38,13 +38,21 @@ pub fn raytrace() {
         Lambertian::new(Color::rgb(76, 76, 218)),
         Metal::new(Color::rgb(15, 151, 204), 0.3),
         Dielectric::new(1.5),
-        DiffuseLight::white(10.0),
-        DiffuseLight::new(Color::rgb(255, 0, 0), 20.0),
-        DiffuseLight::new(Color::rgb(15, 151, 204), 20.0),
+        // DiffuseLight::white(10.0),
+        // DiffuseLight::new(Color::rgb(255, 0, 0), 20.0),
+        // DiffuseLight::new(Color::rgb(15, 151, 204), 20.0),
     ];
 
     // world
     let mut world = World::new();
+    world.add(Triangle::new(
+        Vec3::new(-1.0, -0.5, 0.0),
+        Vec3::new(1.0, -0.5, 0.0),
+        Vec3::new(0.0, 0.5, 0.0),
+        0,
+        false,
+    ).into());
+
     world.add(Sphere {
         center: Vec3::new(0.0, 0.0, -1.0),
         radius: 0.5,
@@ -75,21 +83,21 @@ pub fn raytrace() {
         radius: 0.3,
         material: 5,
     }.into());
-    world.add(Sphere {
-        center: Vec3::new(0.0, 1.2, -1.0),
-        radius: 0.3,
-        material: 6,
-    }.into());
-    world.add(Sphere {
-        center: Vec3::new(-0.0, -0.4, -0.4),
-        radius: 0.04,
-        material: 7,
-    }.into());
-    world.add(Sphere {
-        center: Vec3::new(1.6, -0.4, -1.0),
-        radius: 0.03,
-        material: 8,
-    }.into());
+    // world.add(Sphere {
+    //     center: Vec3::new(0.0, 1.2, -1.0),
+    //     radius: 0.3,
+    //     material: 6,
+    // }.into());
+    // world.add(Sphere {
+    //     center: Vec3::new(-0.0, -0.4, -0.4),
+    //     radius: 0.04,
+    //     material: 7,
+    // }.into());
+    // world.add(Sphere {
+    //     center: Vec3::new(1.6, -0.4, -1.0),
+    //     radius: 0.03,
+    //     material: 8,
+    // }.into());
     println!("{:#?}", &world);
 
     // pixel buffer
@@ -162,6 +170,6 @@ fn ray_color(world: &World, materials: &Vec<Material>, ray: Ray, depth: usize) -
         utils::lerp(1.0, 0.5, t),
         utils::lerp(1.0, 0.7, t),
         utils::lerp(1.0, 1.0, t),
-    ) * 0.001
-    // )
+    // ) * 0.001
+    )
 }

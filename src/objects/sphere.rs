@@ -6,19 +6,12 @@ use crate::behaviors::{Intersect};
 use crate::materials::Material;
 
 
-// #[derive(Debug, Clone, Copy)]
 #[derive(Debug)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
     pub material: usize,
 }
-
-// impl Sphere {
-//     pub fn new(center: Vec3, radius: f64) -> Sphere {
-//         Sphere { center: center, radius: radius }
-//     }
-// }
 
 impl Intersect for Sphere {
 
