@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::Vec3;
 use crate::Ray;
-use crate::behaviors::{Intersect};
+use crate::behaviors::{Intersect, IntersectResult};
 
 use crate::materials::Material;
 
@@ -16,7 +16,9 @@ pub struct Sphere {
 
 impl Intersect for Sphere {
 
-    fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<f64> {
+    fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64) 
+        -> Option<IntersectResult>
+    {
         let oc = ray.origin() - self.center;
         let a = ray.direction().sq_len();
         let half_b = oc.dot(ray.direction());
@@ -36,13 +38,9 @@ impl Intersect for Sphere {
             }
         }
 
-        Some(root)
-    }
-
-    fn get_intersect_normal(&self, ray: &Ray, t: f64) -> Vec3 {
-        let point = ray.at(t);
+        let point = ray.at(root);
         let outward_normal = (point - self.center).unit();
-        outward_normal
+        Some(IntersectResult::new(&ray, root, outward_normal))
     }
 
     fn material<'a>(&self, materials: &'a Vec<Material>) -> &'a Material {

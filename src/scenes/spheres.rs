@@ -1,7 +1,7 @@
 
 
 use crate::utils::{ Vec3, Color, Camera };
-use crate::objects::{ World, Sphere, Triangle };
+use crate::objects::{ World, Sphere };
 use crate::materials::{ Material, Lambertian, Metal, Dielectric, DiffuseLight };
 
 
@@ -32,14 +32,6 @@ pub fn spheres(aspect_ratio: f64, dof: f64) -> (Camera, Vec<Material>, World) {
 
     // world
     let mut world = World::new();
-    world.add(Triangle {
-        v0: Vec3::new(-1.0, -0.5, 0.0),
-        v1: Vec3::new(1.0, -0.5, 0.0),
-        v2: Vec3::new(0.0, 0.5, 0.0),
-        material: 0,
-        doublesided: true,
-    });
-
     world.add(Sphere {
         center: Vec3::new(0.0, 0.0, -1.0),
         radius: 0.5,

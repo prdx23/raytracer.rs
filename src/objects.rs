@@ -1,9 +1,10 @@
 pub mod sphere;
-pub mod triangle;
+pub mod mesh;
 pub mod world;
+pub mod helpers;
 
 pub use sphere::Sphere;
-pub use triangle::Triangle;
+pub use mesh::Mesh;
 pub use world::World;
 
 // use crate::Ray;

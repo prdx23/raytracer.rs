@@ -1,8 +1,6 @@
 
-use crate::Ray;
-use crate::behaviors::{Intersect};
-
-// use crate::objects::Object;
+use crate::{Ray, Vec3};
+use crate::behaviors::{Intersect, IntersectResult};
 
 
 #[derive(Debug)]
@@ -24,23 +22,27 @@ impl World {
 
 impl World {
 
-    pub fn find_intersection(&self, ray: &Ray, t_min: f64, t_max: f64)
-        -> Option<(usize, f64)>
+    pub fn find_intersection(&self, ray: &Ray)
+        -> Option<(usize, IntersectResult)>
     {
-
+        let t_min = 0.0001;
         let mut hit_anything = false;
-        let mut closest_t = t_max;
+        let mut closest_t = f64::INFINITY;
         let mut closest_obj_index = 0;
+        let mut closest_t_result = IntersectResult::new(
+            &ray, closest_t, Vec3::zero()
+        );
 
         for (i, object) in self.objects.iter().enumerate() {
-            if let Some(t) = object.intersect(ray, t_min, closest_t) {
+            if let Some(result) = object.intersect(ray, t_min, closest_t) {
                 hit_anything = true;
-                closest_t = t;
+                closest_t = result.t;
+                closest_t_result = result;
                 closest_obj_index = i;
             }
         }
         if !hit_anything { return None }
 
-        Some((closest_obj_index, closest_t))
+        Some((closest_obj_index, closest_t_result))
     }
 }

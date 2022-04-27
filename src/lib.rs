@@ -8,7 +8,7 @@ mod scenes;
 
 
 use crate::utils::{ Color, Vec3, Ray };
-use crate::behaviors::{ Scatter, IntersectResult };
+use crate::behaviors::{ Scatter };
 use crate::objects::World;
 use crate::materials::Material;
 
@@ -16,13 +16,14 @@ use crate::materials::Material;
 pub fn raytrace() {
 
     let aspect_ratio = 16.0 / 9.0;
-    let width = 400;
+    let width = 800;
     let height = (width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 100;
     let ray_depth = 50;
 
 
-    let (camera, materials, world) = scenes::spheres(aspect_ratio, 0.0);
+    // let (camera, materials, world) = scenes::spheres(aspect_ratio, 0.0);
+    let (camera, materials, world) = scenes::meshtest(aspect_ratio, 0.0);
     println!("{:#?}", &world);
 
 
@@ -65,19 +66,13 @@ fn ray_color(world: &World, materials: &Vec<Material>, ray: Ray, depth: usize) -
 
     if depth <= 0 { return Vec3::zero() }
 
-    if let Some((i, t)) = world.find_intersection(&ray, 0.0001, f64::INFINITY) {
+    if let Some((i, res)) = world.find_intersection(&ray) {
 
         let obj = &world.objects[i];
-
-        let point = ray.at(t);
-        let normal = obj.get_intersect_normal(&ray, t);
-
-        let intersect_result = IntersectResult::new(point, &ray, normal);
-
         let mat = obj.material(materials);
         let emitted = mat.emit();
 
-        match mat.scatter(&ray, intersect_result) {
+        match mat.scatter(&ray, res) {
             Some(r) => {
                 return emitted + r.attenuation * ray_color(&world, &materials, r.ray, depth - 1)
             },
