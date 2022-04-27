@@ -1,3 +1,4 @@
+use std::fmt;
 
 use crate::Vec3;
 use crate::Ray;
@@ -62,4 +63,9 @@ impl Intersect for Triangle {
     fn material<'a>(&self, materials: &'a Vec<Material>) -> &'a Material {
         &materials[self.material]
     }
+
+    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+
 }

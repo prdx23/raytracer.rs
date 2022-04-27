@@ -1,18 +1,28 @@
+use std::fmt;
 
 use crate::Vec3;
 use crate::Ray;
 use crate::materials::Material;
 
-use enum_dispatch::enum_dispatch;
+// use enum_dispatch::enum_dispatch;
 
-#[enum_dispatch(Object)]
+// #[enum_dispatch(Object)]
 pub trait Intersect {
     fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<f64>;
 
     fn get_intersect_normal(&self, ray: &Ray, t: f64) -> Vec3;
 
     fn material<'a>(&self, materials: &'a Vec<Material>) -> &'a Material;
+
+    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 }
+
+impl fmt::Debug for dyn Intersect {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.repr(f)
+    }
+}
+
 
 
 #[derive(Debug, Clone)]
