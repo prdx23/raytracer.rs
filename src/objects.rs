@@ -1,10 +1,14 @@
 pub mod sphere;
 pub mod mesh;
 pub mod world;
+pub mod aabb;
+pub mod bvh;
 pub mod helpers;
 
 pub use sphere::Sphere;
 pub use mesh::Mesh;
+pub use aabb::Aabb;
+pub use bvh::BvhNode;
 pub use world::World;
 
 // use crate::Ray;

@@ -1,6 +1,7 @@
 use std::ops::{
     Add, Sub, Neg, Mul, Div,
     AddAssign, SubAssign, MulAssign, DivAssign,
+    Index, IndexMut,
 };
 
 use rand::Rng;
@@ -211,6 +212,32 @@ impl DivAssign<f64> for Vec3 {
     }
 }
 
+impl Index<usize> for Vec3 {
+    type Output = f64;
+    fn index(&self, i: usize) -> &f64 {
+        match i {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Out of bounds for vector"),
+        }
+    }
+}
+
+
+impl IndexMut<usize> for Vec3 {
+    fn index_mut(&mut self, i: usize) -> &mut f64 {
+        match i {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
+            _ => panic!("Out of bounds for vector"),
+        }
+    }
+}
+
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -338,4 +365,38 @@ mod tests {
     //     let vector1 = Vec3::new(1.0, 2.0, 3.0);
     //     assert_eq!(Vec3 { x:2.0, y:4.0, z:6.0 }, vector1.unit());
     // }
+
+    #[test]
+    fn vector_index() {
+        let vector1 = Vec3::new(1.0, 2.0, 3.0);
+        assert_eq!(1.0, vector1[0]);
+        assert_eq!(2.0, vector1[1]);
+        assert_eq!(3.0, vector1[2]);
+    }
+
+    #[test]
+    #[should_panic(expected = "Out of bounds for vector")]
+    fn vector_index_oob() {
+        let vector1 = Vec3::new(1.0, 2.0, 3.0);
+        assert_eq!(1.0, vector1[4]);
+    }
+
+    #[test]
+    fn vector_index_mut() {
+        let mut vector1 = Vec3::new(1.0, 2.0, 3.0);
+        vector1[0] += 1.0;
+        vector1[1] += 1.0;
+        vector1[2] += 1.0;
+        assert_eq!(2.0, vector1[0]);
+        assert_eq!(3.0, vector1[1]);
+        assert_eq!(4.0, vector1[2]);
+    }
+
+    #[test]
+    #[should_panic(expected = "Out of bounds for vector")]
+    fn vector_index_mut_oob() {
+        let mut vector1 = Vec3::new(1.0, 2.0, 3.0);
+        vector1[4] += 1.0;
+        assert_eq!(1.0, vector1[1]);
+    }
 }

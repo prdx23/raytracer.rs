@@ -65,9 +65,9 @@ impl Camera {
         };
         let offset = (self.u * rnd_radius.x) + (self.v * rnd_radius.y);
 
-        Ray {
-            origin: self.origin + offset,
-            direction: self.lower_left + hor + ver - self.origin - offset,
-        }
+        Ray::new(
+            self.origin + offset,
+            self.lower_left + hor + ver - self.origin - offset,
+        )
     }
 }

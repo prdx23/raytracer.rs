@@ -1,5 +1,14 @@
 use rand::Rng;
 
+static mut RAY_COUNT: u128 = 0;
+static mut RAY_COUNT_PRIMARY: u128 = 0;
+static mut INTERSECT_TESTS: u128 = 0;
+static mut INTERSECT_PASSES: u128 = 0;
+static mut INTERSECT_TESTS_SP: u128 = 0;
+static mut INTERSECT_PASSES_SP: u128 = 0;
+static mut INTERSECT_TESTS_AABB: u128 = 0;
+static mut INTERSECT_PASSES_AABB: u128 = 0;
+
 mod utils;
 mod behaviors;
 mod objects;
@@ -7,8 +16,8 @@ mod materials;
 mod scenes;
 
 
-use crate::utils::{ Color, Vec3, Ray };
-use crate::behaviors::{ Scatter };
+use crate::utils::{ Color, Vec3, Ray, pretty_print_int };
+use crate::behaviors::{ Intersect, Scatter };
 use crate::objects::World;
 use crate::materials::Material;
 
@@ -22,7 +31,7 @@ pub fn raytrace() {
     let ray_depth = 50;
 
 
-    // let (camera, materials, world) = scenes::spheres(aspect_ratio, 0.0);
+    // let (camera, materials, world) = scenes::spheres(aspect_ratio, 0.3);
     let (camera, materials, world) = scenes::meshtest(aspect_ratio, 0.0);
     println!("{:#?}", &world);
 
@@ -48,6 +57,7 @@ pub fn raytrace() {
                 v = ((h as f64) + rng.gen::<f64>()) / height as f64;
 
                 ray = camera.get_ray(u, v);
+                unsafe { RAY_COUNT_PRIMARY += 1; }
                 current_color += ray_color(&world, &materials, ray, ray_depth);
             }
 
@@ -59,25 +69,40 @@ pub fn raytrace() {
 
     utils::image_export("image.ppm", &buffer, width, height);
     println!("\n Image exported!");
+
+    unsafe {
+        println!("Rays processed:                    {}", pretty_print_int(RAY_COUNT));
+        println!("Rays processed(primary):           {}", pretty_print_int(RAY_COUNT_PRIMARY));
+        println!("Intersection tests done(Mesh):     {}", pretty_print_int(INTERSECT_TESTS));
+        println!("Intersection tests passed(Mesh):   {}", pretty_print_int(INTERSECT_PASSES));
+        println!("Intersection tests done(Sphere):   {}", pretty_print_int(INTERSECT_TESTS_SP));
+        println!("Intersection tests passed(Sphere): {}", pretty_print_int(INTERSECT_PASSES_SP));
+        println!("Intersection tests done(aabb):     {}", pretty_print_int(INTERSECT_TESTS_AABB));
+        println!("Intersection tests passed(aabb):   {}", pretty_print_int(INTERSECT_PASSES_AABB));
+    }
 }
+
+static T_MIN: f64 = 0.0001;
+static T_MAX: f64 = f64::INFINITY;
 
 
 fn ray_color(world: &World, materials: &Vec<Material>, ray: Ray, depth: usize) -> Vec3 {
 
     if depth <= 0 { return Vec3::zero() }
 
-    if let Some((i, res)) = world.find_intersection(&ray) {
+    if world.bounding_box().intersect(&ray, T_MIN, T_MAX) {
+        if let Some(res) = world.intersect(&ray, T_MIN, T_MAX) {
+            let mat = &materials[res.material];
+            let emitted = mat.emit();
 
-        let obj = &world.objects[i];
-        let mat = obj.material(materials);
-        let emitted = mat.emit();
-
-        match mat.scatter(&ray, res) {
-            Some(r) => {
-                return emitted + r.attenuation * ray_color(&world, &materials, r.ray, depth - 1)
-            },
-            None => {
-                return emitted
+            match mat.scatter(&ray, res) {
+                Some(r) => {
+                    let color = ray_color(&world, &materials, r.ray, depth - 1);
+                    return emitted + r.attenuation * color
+                },
+                None => {
+                    return emitted
+                }
             }
         }
     }

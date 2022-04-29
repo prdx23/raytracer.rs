@@ -15,5 +15,5 @@ rand = "0.8.5"
 # [profile.dev]
 # opt-level = 0
 
-# [profile.release]
-# debug = true
+[profile.release]
+debug = true

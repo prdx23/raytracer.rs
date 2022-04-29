@@ -3,8 +3,7 @@ use std::fmt;
 use crate::Vec3;
 use crate::Ray;
 use crate::behaviors::{Intersect, IntersectResult};
-
-use crate::materials::Material;
+use crate::objects::Aabb;
 
 
 #[derive(Debug)]
@@ -19,6 +18,8 @@ impl Intersect for Sphere {
     fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64) 
         -> Option<IntersectResult>
     {
+        unsafe { crate::INTERSECT_TESTS_SP += 1; }
+
         let oc = ray.origin() - self.center;
         let a = ray.direction().sq_len();
         let half_b = oc.dot(ray.direction());
@@ -40,11 +41,16 @@ impl Intersect for Sphere {
 
         let point = ray.at(root);
         let outward_normal = (point - self.center).unit();
-        Some(IntersectResult::new(&ray, root, outward_normal))
+
+        unsafe { crate::INTERSECT_PASSES_SP += 1; }
+        Some(IntersectResult::new(&ray, root, outward_normal, self.material))
     }
 
-    fn material<'a>(&self, materials: &'a Vec<Material>) -> &'a Material {
-        &materials[self.material]
+    fn bounding_box(&self) -> Aabb {
+        Aabb {
+            min: self.center - Vec3::new(self.radius, self.radius, self.radius),
+            max: self.center + Vec3::new(self.radius, self.radius, self.radius),
+        }
     }
 
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

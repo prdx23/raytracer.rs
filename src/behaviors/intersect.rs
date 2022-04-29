@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::Vec3;
 use crate::Ray;
-use crate::materials::Material;
+use crate::objects::Aabb;
 
 // use enum_dispatch::enum_dispatch;
 
@@ -10,7 +10,7 @@ use crate::materials::Material;
 pub trait Intersect {
     fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<IntersectResult>;
 
-    fn material<'a>(&self, materials: &'a Vec<Material>) -> &'a Material;
+    fn bounding_box(&self) -> Aabb;
 
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 }
@@ -29,16 +29,17 @@ pub struct IntersectResult {
     pub point: Vec3,
     pub normal: Vec3,
     pub front_face: bool,
+    pub material: usize,
 }
 
 impl IntersectResult {
-    pub fn new(ray: &Ray, t: f64, outward_normal: Vec3 ) -> Self {
+    pub fn new(ray: &Ray, t: f64, outward_normal: Vec3, mat: usize ) -> Self {
         let point = ray.at(t);
         let front_face = ray.direction().dot(outward_normal) < 0.0;
         let normal = match front_face {
             true => outward_normal,
             false => -outward_normal,
         };
-        IntersectResult { t, point, normal, front_face }
+        IntersectResult { t, point, normal, front_face, material: mat }
     }
 }

@@ -1,6 +1,8 @@
+use std::fmt;
 
 use crate::{Ray, Vec3};
 use crate::behaviors::{Intersect, IntersectResult};
+use crate::objects::Aabb;
 
 
 #[derive(Debug)]
@@ -20,29 +22,40 @@ impl World {
     }
 }
 
-impl World {
+impl Intersect for World {
 
-    pub fn find_intersection(&self, ray: &Ray)
-        -> Option<(usize, IntersectResult)>
+    fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64)
+        -> Option<IntersectResult>
     {
-        let t_min = 0.0001;
         let mut hit_anything = false;
-        let mut closest_t = f64::INFINITY;
-        let mut closest_obj_index = 0;
+        let mut closest_t = t_max;
         let mut closest_t_result = IntersectResult::new(
-            &ray, closest_t, Vec3::zero()
+            &ray, closest_t, Vec3::zero(), 0
         );
 
-        for (i, object) in self.objects.iter().enumerate() {
-            if let Some(result) = object.intersect(ray, t_min, closest_t) {
-                hit_anything = true;
-                closest_t = result.t;
-                closest_t_result = result;
-                closest_obj_index = i;
+        for object in self.objects.iter() {
+            if object.bounding_box().intersect(ray, t_min, closest_t) {
+                if let Some(result) = object.intersect(ray, t_min, closest_t) {
+                    hit_anything = true;
+                    closest_t = result.t;
+                    closest_t_result = result;
+                }
             }
         }
         if !hit_anything { return None }
 
-        Some((closest_obj_index, closest_t_result))
+        Some(closest_t_result)
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        let mut bb = Aabb::null();
+        for object in self.objects.iter() {
+            bb = bb.merge(object.bounding_box());
+        }
+        bb
+    }
+
+    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }

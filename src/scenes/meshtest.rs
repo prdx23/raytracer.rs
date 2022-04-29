@@ -7,7 +7,7 @@ use crate::materials::{ Material, Lambertian, Metal, Dielectric, DiffuseLight };
 pub fn meshtest(aspect_ratio: f64, dof: f64) -> (Camera, Vec<Material>, World) {
 
     // camera
-    let look_from = Vec3::new(0.0, 1.5, 13.0);
+    let look_from = Vec3::new(0.0, 3.5, 13.0);
     let look_at = Vec3::new(0.5, 0.5, -0.5);
     let camera = Camera::new(
         look_from, look_at,

@@ -39,15 +39,25 @@ impl Scatter for Lambertian {
         let scatter_dir = result.normal + rnd_vector;
 
         let scattered_ray = match scatter_dir.near_zero() {
-            true => Ray {
-                origin: result.point,
-                direction: result.normal,
-            },
-            false => Ray {
-                origin: result.point,
-                direction: scatter_dir,
-            },
+            true => Ray::new(
+                result.point,
+                result.normal,
+            ),
+            false => Ray::new(
+                result.point,
+                scatter_dir,
+            ),
         };
+        // let scattered_ray = match scatter_dir.near_zero() {
+        //     true => Ray {
+        //         origin: result.point,
+        //         direction: result.normal,
+        //     },
+        //     false => Ray {
+        //         origin: result.point,
+        //         direction: scatter_dir,
+        //     },
+        // };
 
         Some(ScatterResult {
             ray: scattered_ray,

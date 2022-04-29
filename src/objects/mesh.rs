@@ -4,7 +4,7 @@ use std::fmt;
 use crate::Vec3;
 use crate::Ray;
 use crate::behaviors::{Intersect, IntersectResult};
-use crate::materials::Material;
+use crate::objects::Aabb;
 
 
 #[derive(Debug)]
@@ -65,11 +65,20 @@ impl Intersect for Mesh {
         if !hit_anything { return None }
 
         let normal = (v1 - v0).cross(v2 - v0).unit();
-        Some(IntersectResult::new(ray, closest_t, normal))
+        Some(IntersectResult::new(ray, closest_t, normal, self.material))
     }
 
-    fn material<'a>(&self, materials: &'a Vec<Material>) -> &'a Material {
-        &materials[self.material]
+    fn bounding_box(&self) -> Aabb {
+        let mut min = Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+        let mut max = Vec3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        for vertex in self.vertices.iter() {
+            for i in 0..3 {
+                if vertex[i] < min[i] { min[i] = vertex[i] }
+                if vertex[i] > max[i] { max[i] = vertex[i] }
+            }
+        }
+
+        Aabb { min, max }
     }
 
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -85,14 +94,16 @@ impl Intersect for Mesh {
 
 pub fn ray_triangle_intersect(
     v0: Vec3, v1: Vec3, v2: Vec3, doublesided: bool,
-    ray: &Ray, t_min: f64, t_max: f64
+    ray: &Ray, _: f64, _: f64
 ) -> Option<f64> {
 
     // moller-trumbore ray-triangle intersection algo
 
+    unsafe { crate::INTERSECT_TESTS += 1; }
+
     let v0v1 = v1 - v0;
     let v0v2 = v2 - v0;
-    let pvec = ray.direction.cross(v0v2);
+    let pvec = ray.direction().cross(v0v2);
     let det = v0v1.dot(pvec);
 
     if !doublesided {
@@ -106,18 +117,19 @@ pub fn ray_triangle_intersect(
     // cramers rule solution to t-u-v cords from x-y-z
     let invdet = 1.0 / det;
 
-    let tvec = ray.origin - v0;
+    let tvec = ray.origin() - v0;
     let u = tvec.dot(pvec) * invdet;
     if u < 0.0 || u > 1.0 { return None }
 
     let qvec = tvec.cross(v0v1);
-    let v = ray.direction.dot(qvec) * invdet;
+    let v = ray.direction().dot(qvec) * invdet;
     if v < 0.0 || u + v > 1.0 { return None }
 
     let t = v0v2.dot(qvec) * invdet;
 
     // closer obj already found
-    if t < t_min || t > t_max { return None }
+    // if t < t_min || t > t_max { return None }
 
+    unsafe { crate::INTERSECT_PASSES += 1; }
     Some(t)
 }

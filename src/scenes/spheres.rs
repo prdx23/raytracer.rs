@@ -25,9 +25,9 @@ pub fn spheres(aspect_ratio: f64, dof: f64) -> (Camera, Vec<Material>, World) {
         Lambertian::new(Color::rgb(76, 76, 218)),
         Metal::new(Color::rgb(15, 151, 204), 0.3),
         Dielectric::new(1.5),
-        // DiffuseLight::white(10.0),
-        // DiffuseLight::new(Color::rgb(255, 0, 0), 20.0),
-        // DiffuseLight::new(Color::rgb(15, 151, 204), 20.0),
+        DiffuseLight::white(10.0),
+        DiffuseLight::new(Color::rgb(255, 0, 0), 20.0),
+        DiffuseLight::new(Color::rgb(15, 151, 204), 20.0),
     ];
 
     // world
@@ -62,21 +62,21 @@ pub fn spheres(aspect_ratio: f64, dof: f64) -> (Camera, Vec<Material>, World) {
         radius: 0.3,
         material: 5,
     });
-    // world.add(Sphere {
-    //     center: Vec3::new(0.0, 1.2, -1.0),
-    //     radius: 0.3,
-    //     material: 6,
-    // });
-    // world.add(Sphere {
-    //     center: Vec3::new(-0.0, -0.4, -0.4),
-    //     radius: 0.04,
-    //     material: 7,
-    // });
-    // world.add(Sphere {
-    //     center: Vec3::new(1.6, -0.4, -1.0),
-    //     radius: 0.03,
-    //     material: 8,
-    // });
+    world.add(Sphere {
+        center: Vec3::new(0.0, 1.2, -1.0),
+        radius: 0.3,
+        material: 6,
+    });
+    world.add(Sphere {
+        center: Vec3::new(-0.0, -0.4, -0.4),
+        radius: 0.04,
+        material: 7,
+    });
+    world.add(Sphere {
+        center: Vec3::new(1.6, -0.4, -1.0),
+        radius: 0.03,
+        material: 8,
+    });
 
     (camera, materials, world)
 }

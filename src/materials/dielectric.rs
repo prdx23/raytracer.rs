@@ -30,7 +30,7 @@ impl Scatter for Dielectric {
             false => self.refraction_index,
         };
 
-        let ray_dir = ray.direction.unit();
+        let ray_dir = ray.direction().unit();
 
         let cos_theta = (-ray_dir).dot(result.normal).min(1.0);
         let sin_theta = (1.0 - (cos_theta * cos_theta)).sqrt();
@@ -46,7 +46,8 @@ impl Scatter for Dielectric {
 
         // let reflected_ray = Ray { origin: result.point, direction: dir };
         Some(ScatterResult {
-            ray: Ray { origin: result.point, direction: dir },
+            // ray: Ray { origin: result.point, direction: dir },
+            ray: Ray::new(result.point, dir),
             attenuation: Vec3::new(1.0, 1.0, 1.0),
         })
     }
