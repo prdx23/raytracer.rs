@@ -34,12 +34,10 @@ impl Intersect for World {
         );
 
         for object in self.objects.iter() {
-            if object.bounding_box().intersect(ray, t_min, closest_t) {
-                if let Some(result) = object.intersect(ray, t_min, closest_t) {
-                    hit_anything = true;
-                    closest_t = result.t;
-                    closest_t_result = result;
-                }
+            if let Some(result) = object.intersect(ray, t_min, closest_t) {
+                hit_anything = true;
+                closest_t = result.t;
+                closest_t_result = result;
             }
         }
         if !hit_anything { return None }

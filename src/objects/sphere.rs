@@ -47,9 +47,10 @@ impl Intersect for Sphere {
     }
 
     fn bounding_box(&self) -> Aabb {
+        let radius_vector = Vec3::new(self.radius, self.radius, self.radius);
         Aabb {
-            min: self.center - Vec3::new(self.radius, self.radius, self.radius),
-            max: self.center + Vec3::new(self.radius, self.radius, self.radius),
+            lower: self.center - radius_vector,
+            upper: self.center + radius_vector,
         }
     }
 

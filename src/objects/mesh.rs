@@ -69,16 +69,16 @@ impl Intersect for Mesh {
     }
 
     fn bounding_box(&self) -> Aabb {
-        let mut min = Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
-        let mut max = Vec3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let mut lower = Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+        let mut upper = Vec3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
         for vertex in self.vertices.iter() {
             for i in 0..3 {
-                if vertex[i] < min[i] { min[i] = vertex[i] }
-                if vertex[i] > max[i] { max[i] = vertex[i] }
+                if vertex[i] < lower[i] { lower[i] = vertex[i] }
+                if vertex[i] > upper[i] { upper[i] = vertex[i] }
             }
         }
 
-        Aabb { min, max }
+        Aabb { lower, upper }
     }
 
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

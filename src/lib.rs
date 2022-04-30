@@ -18,7 +18,7 @@ mod scenes;
 
 use crate::utils::{ Color, Vec3, Ray, pretty_print_int };
 use crate::behaviors::{ Intersect, Scatter };
-use crate::objects::World;
+use crate::objects::BvhNode;
 use crate::materials::Material;
 
 
@@ -31,9 +31,12 @@ pub fn raytrace() {
     let ray_depth = 50;
 
 
-    // let (camera, materials, world) = scenes::spheres(aspect_ratio, 0.3);
-    let (camera, materials, world) = scenes::meshtest(aspect_ratio, 0.0);
+    let (camera, materials, world) = scenes::spheres(aspect_ratio, 0.3);
+    // let (camera, materials, world) = scenes::meshtest(aspect_ratio, 0.0);
     println!("{:#?}", &world);
+
+    let root = BvhNode::construct(world.objects);
+    println!("{:?}", root);
 
 
     let mut buffer: Vec<Color> = vec![Color::black() ; width * height];
@@ -58,7 +61,7 @@ pub fn raytrace() {
 
                 ray = camera.get_ray(u, v);
                 unsafe { RAY_COUNT_PRIMARY += 1; }
-                current_color += ray_color(&world, &materials, ray, ray_depth);
+                current_color += ray_color(&root, &materials, ray, ray_depth);
             }
 
             i = ((height - h - 1) * width) + w;
@@ -86,23 +89,21 @@ static T_MIN: f64 = 0.0001;
 static T_MAX: f64 = f64::INFINITY;
 
 
-fn ray_color(world: &World, materials: &Vec<Material>, ray: Ray, depth: usize) -> Vec3 {
+fn ray_color(root: &BvhNode, materials: &Vec<Material>, ray: Ray, depth: usize) -> Vec3 {
 
     if depth <= 0 { return Vec3::zero() }
 
-    if world.bounding_box().intersect(&ray, T_MIN, T_MAX) {
-        if let Some(res) = world.intersect(&ray, T_MIN, T_MAX) {
-            let mat = &materials[res.material];
-            let emitted = mat.emit();
+    if let Some(result) = root.intersect(&ray, T_MIN, T_MAX) {
+        let material = &materials[result.material];
+        let emitted = material.emit();
 
-            match mat.scatter(&ray, res) {
-                Some(r) => {
-                    let color = ray_color(&world, &materials, r.ray, depth - 1);
-                    return emitted + r.attenuation * color
-                },
-                None => {
-                    return emitted
-                }
+        match material.scatter(&ray, result) {
+            Some(r) => {
+                let color = ray_color(&root, &materials, r.ray, depth - 1);
+                return emitted + r.attenuation * color
+            },
+            None => {
+                return emitted
             }
         }
     }

@@ -6,8 +6,8 @@ use crate::{ Vec3, Ray };
 
 #[derive(Debug)]
 pub struct Aabb {
-    pub min: Vec3,
-    pub max: Vec3,
+    pub lower: Vec3,
+    pub upper: Vec3,
 }
 
 
@@ -17,8 +17,8 @@ impl Aabb {
         unsafe { crate::INTERSECT_TESTS_AABB += 1; }
         for i in 0..3 {
             let invd = 1.0 / ray.direction()[i];
-            let mut t0 = (self.min[i] - ray.origin()[i]) * invd;
-            let mut t1 = (self.max[i] - ray.origin()[i]) * invd;
+            let mut t0 = (self.lower[i] - ray.origin()[i]) * invd;
+            let mut t1 = (self.upper[i] - ray.origin()[i]) * invd;
 
             if invd < 0.0 {
                 std::mem::swap(&mut t0, &mut t1);
@@ -37,21 +37,21 @@ impl Aabb {
 
     pub fn merge(self, other: Self) -> Self {
         Self {
-            min: Vec3::new(
-                self.min.x.min(other.min.x),
-                self.min.y.min(other.min.y),
-                self.min.z.min(other.min.z),
+            lower: Vec3::new(
+                self.lower.x.min(other.lower.x),
+                self.lower.y.min(other.lower.y),
+                self.lower.z.min(other.lower.z),
             ),
-            max: Vec3::new(
-                self.max.x.max(other.max.x),
-                self.max.y.max(other.max.y),
-                self.max.z.max(other.max.z),
+            upper: Vec3::new(
+                self.upper.x.max(other.upper.x),
+                self.upper.y.max(other.upper.y),
+                self.upper.z.max(other.upper.z),
             ),
         }
     }
 
     pub fn null() -> Self {
-        Self { min: Vec3::zero(), max: Vec3::zero() }
+        Self { lower: Vec3::zero(), upper: Vec3::zero() }
     }
 
 }
