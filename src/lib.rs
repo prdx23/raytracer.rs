@@ -33,10 +33,10 @@ pub fn raytrace() {
 
     let (camera, materials, world) = scenes::spheres(aspect_ratio, 0.3);
     // let (camera, materials, world) = scenes::meshtest(aspect_ratio, 0.0);
-    println!("{:#?}", &world);
+    // println!("{:#?}", &world);
 
     let root = BvhNode::construct(world.objects);
-    println!("{:?}", root);
+    // println!("{:?}", root);
 
 
     let mut buffer: Vec<Color> = vec![Color::black() ; width * height];

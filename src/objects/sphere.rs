@@ -54,6 +54,10 @@ impl Intersect for Sphere {
         }
     }
 
+    fn subdivide(&self) -> Option<Vec<Box<dyn Intersect>>> {
+        None
+    }
+
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
     }

@@ -9,9 +9,8 @@ use crate::objects::Aabb;
 // #[enum_dispatch(Object)]
 pub trait Intersect {
     fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<IntersectResult>;
-
     fn bounding_box(&self) -> Aabb;
-
+    fn subdivide(&self) -> Option<Vec<Box<dyn Intersect>>>;
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 }
 

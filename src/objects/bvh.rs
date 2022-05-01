@@ -29,6 +29,9 @@ impl BvhNode {
             },
             1 => {
                 let left = objects.pop().unwrap();
+                if let Some(objs) = left.subdivide() {
+                    return BvhNode::construct(objs);
+                }
                 Self {
                     bbox: left.bounding_box(),
                     left: left,
@@ -36,8 +39,16 @@ impl BvhNode {
                 }
             },
             // 2 => {
-            //     let right = objects.pop().unwrap();
-            //     let left = objects.pop().unwrap();
+            //     let mut right = objects.pop().unwrap();
+            //     if let Some(objs) = right.subdivide() {
+            //         right = Box::new(BvhNode::construct(objs));
+            //     }
+
+            //     let mut left = objects.pop().unwrap();
+            //     if let Some(objs) = left.subdivide() {
+            //         left = Box::new(BvhNode::construct(objs));
+            //     }
+
             //     Self {
             //         bbox: left.bounding_box().merge(right.bounding_box()),
             //         left, right,
@@ -107,6 +118,10 @@ impl Intersect for BvhNode {
 
     fn bounding_box(&self) -> Aabb {
         Aabb { lower: self.bbox.lower, upper: self.bbox.upper }
+    }
+
+    fn subdivide(&self) -> Option<Vec<Box<dyn Intersect>>> {
+        None
     }
 
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
