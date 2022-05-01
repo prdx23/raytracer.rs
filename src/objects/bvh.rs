@@ -32,27 +32,27 @@ impl BvhNode {
                     return BvhNode::construct(objs, new_axis);
                 }
                 Self {
-                    bbox: left.bounding_box(),
+                    bbox: left.bbox(),
                     left: left,
                     right: Box::new(NullObject),
                 }
             },
-            // 2 => {
-            //     let mut right = objects.pop().unwrap();
-            //     if let Some(objs) = right.subdivide() {
-            //         right = Box::new(BvhNode::construct(objs));
-            //     }
+            2 => {
+                let mut right = objects.pop().unwrap();
+                if let Some(objs) = right.subdivide(axis) {
+                    right = Box::new(BvhNode::construct(objs, new_axis));
+                }
 
-            //     let mut left = objects.pop().unwrap();
-            //     if let Some(objs) = left.subdivide() {
-            //         left = Box::new(BvhNode::construct(objs));
-            //     }
+                let mut left = objects.pop().unwrap();
+                if let Some(objs) = left.subdivide(axis) {
+                    left = Box::new(BvhNode::construct(objs, new_axis));
+                }
 
-            //     Self {
-            //         bbox: left.bounding_box().merge(right.bounding_box()),
-            //         left, right,
-            //     }
-            // },
+                Self {
+                    bbox: left.bbox().merge(right.bbox()),
+                    left, right,
+                }
+            },
             len => {
                 match axis {
                     0 => objects.sort_unstable_by(compare_x),
@@ -64,7 +64,7 @@ impl BvhNode {
                 let left = BvhNode::construct(objects, new_axis);
 
                 Self {
-                    bbox: left.bounding_box().merge(right.bounding_box()),
+                    bbox: left.bbox().merge(right.bbox()),
                     left: Box::new(left),
                     right: Box::new(right),
                 }
@@ -77,9 +77,7 @@ impl BvhNode {
 fn compare(
     obj1: &Box<dyn Intersect>, obj2: &Box<dyn Intersect>, axis: usize
 ) -> Ordering {
-    obj1.bounding_box().lower[axis].partial_cmp(
-        &obj2.bounding_box().lower[axis]
-    ).unwrap()
+    obj1.bbox().lower[axis].partial_cmp(&obj2.bbox().lower[axis]).unwrap()
 }
 
 fn compare_x(obj1: &Box<dyn Intersect>, obj2: &Box<dyn Intersect>) -> Ordering {
@@ -100,22 +98,45 @@ impl Intersect for BvhNode {
     fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64)
         -> Option<IntersectResult>
     {
-        if !self.bbox.intersect(ray, t_min, t_max) {
-            return None
-        }
+        let bbox_res_left = self.left.bbox().intersect(ray, t_min, t_max);
+        let bbox_res_right = self.right.bbox().intersect(ray, t_min, t_max);
 
-        match self.left.intersect(ray, t_min, t_max) {
-            Some(left_result) => {
-                match self.right.intersect(ray, t_min, left_result.t) {
-                    Some(right_result) => Some(right_result),
-                    None => Some(left_result),
-                }
+        match (bbox_res_left, bbox_res_right) {
+
+            (None, None) => {
+                return None
             },
-            None => self.right.intersect(ray, t_min, t_max)
+
+            (Some(_), None) => {
+                return self.left.intersect(ray, t_min, t_max)
+            }
+
+            (None, Some(_)) => {
+                return self.right.intersect(ray, t_min, t_max)
+            }
+
+            (Some(t_left), Some(t_right)) => {
+                let first: &Box<dyn Intersect>;
+                let last: &Box<dyn Intersect>;
+                if t_left < t_right {
+                    first = &self.left;
+                    last = &self.right;
+                } else {
+                    first = &self.right;
+                    last = &self.left;
+                }
+                if let Some(first_result) = first.intersect(ray, t_min, t_max) {
+                    if let Some(last_result) = last.intersect(ray, t_min, first_result.t) {
+                        return Some(last_result)
+                    }
+                    return Some(first_result)
+                }
+                return last.intersect(ray, t_min, t_max)
+            }
         }
     }
 
-    fn bounding_box(&self) -> Aabb {
+    fn bbox(&self) -> Aabb {
         Aabb { lower: self.bbox.lower, upper: self.bbox.upper }
     }
 

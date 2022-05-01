@@ -45,10 +45,10 @@ impl Intersect for World {
         Some(closest_t_result)
     }
 
-    fn bounding_box(&self) -> Aabb {
+    fn bbox(&self) -> Aabb {
         let mut bb = Aabb::null();
         for object in self.objects.iter() {
-            bb = bb.merge(object.bounding_box());
+            bb = bb.merge(object.bbox());
         }
         bb
     }

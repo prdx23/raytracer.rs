@@ -67,7 +67,7 @@ impl Intersect for Mesh {
         Some(IntersectResult::new(ray, closest_t, normal, self.material))
     }
 
-    fn bounding_box(&self) -> Aabb {
+    fn bbox(&self) -> Aabb {
         let mut lower = Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
         let mut upper = Vec3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
         for vertex in self.vertices.iter() {
@@ -91,7 +91,7 @@ impl Intersect for Mesh {
         let mut left_vertices: Vec<Vec3> = vec![];
         let mut right_vertices: Vec<Vec3> = vec![];
 
-        let bbox = self.bounding_box();
+        let bbox = self.bbox();
         let mid = (bbox.lower + bbox.upper) / 2.0;
         // let axis = rand::thread_rng().gen_range(0..3);
 

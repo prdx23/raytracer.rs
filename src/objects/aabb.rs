@@ -13,7 +13,7 @@ pub struct Aabb {
 
 impl Aabb {
 
-    pub fn intersect(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> bool {
+    pub fn intersect(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> Option<f64> {
         unsafe { crate::INTERSECT_TESTS_AABB += 1; }
         for i in 0..3 {
             let invd = 1.0 / ray.direction()[i];
@@ -28,11 +28,11 @@ impl Aabb {
             t_max = if t1 < t_max { t1 } else { t_max };
 
             if t_max <= t_min {
-                return false
+                return None
             }
         }
         unsafe { crate::INTERSECT_PASSES_AABB += 1; }
-        return true
+        return Some(t_min)
     }
 
     pub fn merge(self, other: Self) -> Self {

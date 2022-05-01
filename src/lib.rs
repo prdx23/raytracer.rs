@@ -93,20 +93,22 @@ fn ray_color(root: &BvhNode, materials: &Vec<Material>, ray: Ray, depth: usize) 
 
     if depth <= 0 { return Vec3::zero() }
 
-    if let Some(result) = root.intersect(&ray, T_MIN, T_MAX) {
-        let material = &materials[result.material];
-        let emitted = material.emit();
+    // if let Some(_) = root.bbox().intersect(&ray, T_MIN, T_MAX) {
+        if let Some(result) = root.intersect(&ray, T_MIN, T_MAX) {
+            let material = &materials[result.material];
+            let emitted = material.emit();
 
-        match material.scatter(&ray, result) {
-            Some(r) => {
-                let color = ray_color(&root, &materials, r.ray, depth - 1);
-                return emitted + r.attenuation * color
-            },
-            None => {
-                return emitted
+            match material.scatter(&ray, result) {
+                Some(r) => {
+                    let color = ray_color(&root, &materials, r.ray, depth - 1);
+                    return emitted + r.attenuation * color
+                },
+                None => {
+                    return emitted
+                }
             }
         }
-    }
+    // }
 
     // Vec3::zero()
     let unit_direction = ray.direction().unit();

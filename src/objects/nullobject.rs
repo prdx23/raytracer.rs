@@ -16,7 +16,7 @@ impl Intersect for NullObject {
         None
     }
 
-    fn bounding_box(&self) -> Aabb {
+    fn bbox(&self) -> Aabb {
         Aabb::null()
     }
 
