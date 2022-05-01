@@ -5,8 +5,6 @@ use crate::Ray;
 use crate::behaviors::{ Intersect, IntersectResult };
 use crate::objects::{ Aabb, NullObject };
 
-use rand::Rng;
-
 
 #[derive(Debug)]
 pub struct BvhNode {
@@ -18,7 +16,8 @@ pub struct BvhNode {
 
 impl BvhNode {
 
-    pub fn construct(mut objects: Vec<Box<dyn Intersect>>) -> Self {
+    pub fn construct(mut objects: Vec<Box<dyn Intersect>>, axis: usize) -> Self {
+        let new_axis = (axis + 1) % 3;
         match objects.len() {
             0 => {
                 Self {
@@ -29,8 +28,8 @@ impl BvhNode {
             },
             1 => {
                 let left = objects.pop().unwrap();
-                if let Some(objs) = left.subdivide() {
-                    return BvhNode::construct(objs);
+                if let Some(objs) = left.subdivide(axis) {
+                    return BvhNode::construct(objs, new_axis);
                 }
                 Self {
                     bbox: left.bounding_box(),
@@ -55,14 +54,14 @@ impl BvhNode {
             //     }
             // },
             len => {
-                match rand::thread_rng().gen_range(0..3) {
+                match axis {
                     0 => objects.sort_unstable_by(compare_x),
                     1 => objects.sort_unstable_by(compare_y),
                     _ => objects.sort_unstable_by(compare_z),
                 }
 
-                let right = BvhNode::construct(objects.split_off(len / 2));
-                let left = BvhNode::construct(objects);
+                let right = BvhNode::construct(objects.split_off(len / 2), new_axis);
+                let left = BvhNode::construct(objects, new_axis);
 
                 Self {
                     bbox: left.bounding_box().merge(right.bounding_box()),
@@ -120,7 +119,7 @@ impl Intersect for BvhNode {
         Aabb { lower: self.bbox.lower, upper: self.bbox.upper }
     }
 
-    fn subdivide(&self) -> Option<Vec<Box<dyn Intersect>>> {
+    fn subdivide(&self, _: usize) -> Option<Vec<Box<dyn Intersect>>> {
         None
     }
 

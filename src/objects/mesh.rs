@@ -6,7 +6,6 @@ use crate::Ray;
 use crate::behaviors::{Intersect, IntersectResult};
 use crate::objects::Aabb;
 
-use rand::Rng;
 
 #[derive(Debug)]
 pub struct Mesh {
@@ -81,7 +80,7 @@ impl Intersect for Mesh {
         Aabb { lower, upper }
     }
 
-    fn subdivide(&self) -> Option<Vec<Box<dyn Intersect>>> {
+    fn subdivide(&self, axis: usize) -> Option<Vec<Box<dyn Intersect>>> {
 
         // mesh has 20 or less triangles
         if self.index_amt / 3 < 20 { return None }
@@ -94,7 +93,7 @@ impl Intersect for Mesh {
 
         let bbox = self.bounding_box();
         let mid = (bbox.lower + bbox.upper) / 2.0;
-        let axis = rand::thread_rng().gen_range(0..3);
+        // let axis = rand::thread_rng().gen_range(0..3);
 
         for i in (0..self.index_amt).step_by(3) {
             let v0 = self.vertices[self.indices[i + 0]];

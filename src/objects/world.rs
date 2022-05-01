@@ -53,7 +53,7 @@ impl Intersect for World {
         bb
     }
 
-    fn subdivide(&self) -> Option<Vec<Box<dyn Intersect>>> {
+    fn subdivide(&self, _: usize) -> Option<Vec<Box<dyn Intersect>>> {
         None
     }
 

@@ -35,7 +35,7 @@ pub fn raytrace() {
     // let (camera, materials, world) = scenes::meshtest(aspect_ratio, 0.0);
     // println!("{:#?}", &world);
 
-    let root = BvhNode::construct(world.objects);
+    let root = BvhNode::construct(world.objects, 0);
     // println!("{:?}", root);
 
 
