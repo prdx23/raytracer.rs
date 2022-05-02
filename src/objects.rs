@@ -10,7 +10,7 @@ pub use sphere::Sphere;
 pub use mesh::Mesh;
 pub use aabb::Aabb;
 pub use bvh::BvhNode;
-pub use nullobject::NullObject;
+// pub use nullobject::NullObject;
 pub use world::World;
 
 // use crate::Ray;

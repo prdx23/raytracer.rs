@@ -17,7 +17,7 @@ mod scenes;
 
 
 use crate::utils::{ Color, Vec3, Ray, pretty_print_int };
-use crate::behaviors::{ Intersect, Scatter };
+use crate::behaviors::Scatter;
 use crate::objects::BvhNode;
 use crate::materials::Material;
 

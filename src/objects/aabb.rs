@@ -4,7 +4,7 @@ use crate::{ Vec3, Ray };
 // use crate::behaviors::{Intersect, IntersectResult};
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Aabb {
     pub lower: Vec3,
     pub upper: Vec3,

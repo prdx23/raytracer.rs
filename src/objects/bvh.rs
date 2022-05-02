@@ -1,15 +1,15 @@
-use std::fmt;
 use std::cmp::Ordering;
 
 use crate::Ray;
 use crate::behaviors::{ Intersect, IntersectResult };
-use crate::objects::{ Aabb, NullObject };
+use crate::objects::{ Aabb };
 
 
 #[derive(Debug)]
 pub struct BvhNode {
-    pub left: Box<dyn Intersect>,
-    pub right: Box<dyn Intersect>,
+    pub object: Option<Box<dyn Intersect>>,
+    pub left: Option<Box<BvhNode>>,
+    pub right: Option<Box<BvhNode>>,
     pub bbox: Aabb,
 }
 
@@ -21,38 +21,40 @@ impl BvhNode {
         match objects.len() {
             0 => {
                 Self {
-                    left: Box::new(NullObject),
-                    right: Box::new(NullObject),
+                    object: None,
+                    left: None,
+                    right: None,
                     bbox: Aabb::null(),
                 }
             },
             1 => {
-                let left = objects.pop().unwrap();
-                if let Some(objs) = left.subdivide(axis) {
+                let object = objects.pop().unwrap();
+                if let Some(objs) = object.subdivide(axis) {
                     return BvhNode::construct(objs, new_axis);
                 }
                 Self {
-                    bbox: left.bbox(),
-                    left: left,
-                    right: Box::new(NullObject),
+                    bbox: object.bbox(),
+                    left: None,
+                    right: None,
+                    object: Some(object),
                 }
             },
-            2 => {
-                let mut right = objects.pop().unwrap();
-                if let Some(objs) = right.subdivide(axis) {
-                    right = Box::new(BvhNode::construct(objs, new_axis));
-                }
+            // 2 => {
+            //     let mut right = objects.pop().unwrap();
+            //     if let Some(objs) = right.subdivide(axis) {
+            //         right = Box::new(BvhNode::construct(objs, new_axis));
+            //     }
 
-                let mut left = objects.pop().unwrap();
-                if let Some(objs) = left.subdivide(axis) {
-                    left = Box::new(BvhNode::construct(objs, new_axis));
-                }
+            //     let mut left = objects.pop().unwrap();
+            //     if let Some(objs) = left.subdivide(axis) {
+            //         left = Box::new(BvhNode::construct(objs, new_axis));
+            //     }
 
-                Self {
-                    bbox: left.bbox().merge(right.bbox()),
-                    left, right,
-                }
-            },
+            //     Self {
+            //         bbox: left.bbox().merge(right.bbox()),
+            //         left, right,
+            //     }
+            // },
             len => {
                 match axis {
                     0 => objects.sort_unstable_by(compare_x),
@@ -64,9 +66,10 @@ impl BvhNode {
                 let left = BvhNode::construct(objects, new_axis);
 
                 Self {
-                    bbox: left.bbox().merge(right.bbox()),
-                    left: Box::new(left),
-                    right: Box::new(right),
+                    bbox: left.bbox.clone().merge(right.bbox.clone()),
+                    left: Some(Box::new(left)),
+                    right: Some(Box::new(right)),
+                    object: None,
                 }
             }
         }
@@ -93,59 +96,75 @@ fn compare_z(obj1: &Box<dyn Intersect>, obj2: &Box<dyn Intersect>) -> Ordering {
 }
 
 
-impl Intersect for BvhNode {
+impl BvhNode {
 
-    fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64)
+    pub fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64)
         -> Option<IntersectResult>
     {
-        let bbox_res_left = self.left.bbox().intersect(ray, t_min, t_max);
-        let bbox_res_right = self.right.bbox().intersect(ray, t_min, t_max);
 
-        match (bbox_res_left, bbox_res_right) {
+        let mut left: &Box<BvhNode>;
+        let mut right: &Box<BvhNode>;
 
+        match (self.left.as_ref(), self.right.as_ref()) {
+
+            // leaf node
             (None, None) => {
-                return None
+                return match &self.object {
+                    Some(object) => object.intersect(ray, t_min, t_max),
+                    None => None,
+                }
+            }
+
+            (Some(l), Some(r)) => {
+                left = l;
+                right = r;
+            }
+
+            _ => {
+                panic!("One node of BvhNode is None while other is not");
+            }
+
+        }
+
+
+        match left.bbox.intersect(ray, t_min, t_max) {
+
+            Some(left_t) => {
+                match right.bbox.intersect(ray, t_min, t_max) {
+                    Some(right_t) => {
+
+                        if left_t > right_t {
+                            // right is closer, so swap to check right first
+                            std::mem::swap(&mut left, &mut right);
+                        }
+
+                        match left.intersect(ray, t_min, t_max) {
+                            Some(left_res) => {
+                                match right.intersect(ray, t_min, left_res.t) {
+                                    Some(right_res) => return Some(right_res),
+                                    None => return Some(left_res),
+                                }
+                            },
+                            None => {
+                                return right.intersect(ray, t_min, t_max)
+                            },
+                        }
+
+                    },
+                    None => {
+                        return left.intersect(ray, t_min, t_max)
+                    },
+                }
             },
 
-            (Some(_), None) => {
-                return self.left.intersect(ray, t_min, t_max)
-            }
-
-            (None, Some(_)) => {
-                return self.right.intersect(ray, t_min, t_max)
-            }
-
-            (Some(t_left), Some(t_right)) => {
-                let first: &Box<dyn Intersect>;
-                let last: &Box<dyn Intersect>;
-                if t_left < t_right {
-                    first = &self.left;
-                    last = &self.right;
-                } else {
-                    first = &self.right;
-                    last = &self.left;
+            None => {
+                if let Some(_) = right.bbox.intersect(ray, t_min, t_max) {
+                    return right.intersect(ray, t_min, t_max)
                 }
-                if let Some(first_result) = first.intersect(ray, t_min, t_max) {
-                    if let Some(last_result) = last.intersect(ray, t_min, first_result.t) {
-                        return Some(last_result)
-                    }
-                    return Some(first_result)
-                }
-                return last.intersect(ray, t_min, t_max)
-            }
+            },
+
         }
-    }
 
-    fn bbox(&self) -> Aabb {
-        Aabb { lower: self.bbox.lower, upper: self.bbox.upper }
-    }
-
-    fn subdivide(&self, _: usize) -> Option<Vec<Box<dyn Intersect>>> {
         None
     }
-
-    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#?}", self)
-    }
-
 }
