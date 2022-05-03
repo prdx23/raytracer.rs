@@ -54,7 +54,7 @@ impl Intersect for Sphere {
         }
     }
 
-    fn subdivide(&self, _: usize) -> Option<Vec<Box<dyn Intersect>>> {
+    fn divide(&self) -> Option<Vec<Box<dyn Intersect>>> {
         None
     }
 

@@ -25,8 +25,7 @@ struct Bucket {
 
 impl BvhNode {
 
-    pub fn construct(mut objects: Vec<Box<dyn Intersect>>, axis: usize) -> Self {
-        let new_axis = (axis + 1) % 3;
+    pub fn construct(mut objects: Vec<Box<dyn Intersect>>) -> Self {
         match objects.len() {
             0 => {
                 Self {
@@ -38,9 +37,6 @@ impl BvhNode {
             },
             1 => {
                 let object = objects.pop().unwrap();
-                if let Some(objs) = object.subdivide(axis) {
-                    return BvhNode::construct(objs, new_axis);
-                }
                 let bbox = object.bbox();
                 Self {
                     bbox,
@@ -54,8 +50,8 @@ impl BvhNode {
                 let left = objects.pop().unwrap();
 
                 let bbox = left.bbox().clone().merge(right.bbox().clone());
-                let left_node = BvhNode::construct(vec![left], new_axis);
-                let right_node = BvhNode::construct(vec![right], new_axis);
+                let left_node = BvhNode::construct(vec![left]);
+                let right_node = BvhNode::construct(vec![right]);
 
                 Self {
                     bbox,
@@ -142,8 +138,8 @@ impl BvhNode {
 
                 Self {
                     bbox: full_bounds,
-                    left: Some(Box::new(BvhNode::construct(left_list, new_axis))),
-                    right: Some(Box::new(BvhNode::construct(right_list, new_axis))),
+                    left: Some(Box::new(BvhNode::construct(left_list))),
+                    right: Some(Box::new(BvhNode::construct(right_list))),
                     object: None,
                 }
             }

@@ -22,42 +22,42 @@ impl World {
     }
 }
 
-impl Intersect for World {
+// impl Intersect for World {
 
-    fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64)
-        -> Option<IntersectResult>
-    {
-        let mut hit_anything = false;
-        let mut closest_t = t_max;
-        let mut closest_t_result = IntersectResult::new(
-            &ray, closest_t, Vec3::zero(), 0
-        );
+//     fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64)
+//         -> Option<IntersectResult>
+//     {
+//         let mut hit_anything = false;
+//         let mut closest_t = t_max;
+//         let mut closest_t_result = IntersectResult::new(
+//             &ray, closest_t, Vec3::zero(), 0
+//         );
 
-        for object in self.objects.iter() {
-            if let Some(result) = object.intersect(ray, t_min, closest_t) {
-                hit_anything = true;
-                closest_t = result.t;
-                closest_t_result = result;
-            }
-        }
-        if !hit_anything { return None }
+//         for object in self.objects.iter() {
+//             if let Some(result) = object.intersect(ray, t_min, closest_t) {
+//                 hit_anything = true;
+//                 closest_t = result.t;
+//                 closest_t_result = result;
+//             }
+//         }
+//         if !hit_anything { return None }
 
-        Some(closest_t_result)
-    }
+//         Some(closest_t_result)
+//     }
 
-    fn bbox(&self) -> Aabb {
-        let mut bb = Aabb::null();
-        for object in self.objects.iter() {
-            bb = bb.merge(object.bbox());
-        }
-        bb
-    }
+//     fn bbox(&self) -> Aabb {
+//         let mut bb = Aabb::null();
+//         for object in self.objects.iter() {
+//             bb = bb.merge(object.bbox());
+//         }
+//         bb
+//     }
 
-    fn subdivide(&self, _: usize) -> Option<Vec<Box<dyn Intersect>>> {
-        None
-    }
+//     fn subdivide(&self, _: usize) -> Option<Vec<Box<dyn Intersect>>> {
+//         None
+//     }
 
-    fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
+//     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(f, "{:?}", self)
+//     }
+// }

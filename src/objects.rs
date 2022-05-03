@@ -1,5 +1,6 @@
 pub mod sphere;
 pub mod mesh;
+pub mod triangle;
 pub mod world;
 pub mod aabb;
 pub mod bvh;
@@ -8,6 +9,7 @@ pub mod nullobject;
 
 pub use sphere::Sphere;
 pub use mesh::Mesh;
+pub use triangle::Triangle;
 pub use aabb::Aabb;
 pub use bvh::BvhNode;
 // pub use nullobject::NullObject;

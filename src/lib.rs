@@ -17,7 +17,7 @@ mod scenes;
 
 
 use crate::utils::{ Color, Vec3, Ray, pretty_print_int };
-use crate::behaviors::Scatter;
+use crate::behaviors::{ Intersect, Scatter };
 use crate::objects::BvhNode;
 use crate::materials::Material;
 
@@ -35,7 +35,17 @@ pub fn raytrace() {
     // let (camera, materials, world) = scenes::meshtest(aspect_ratio, 0.0);
     // println!("{:#?}", &world);
 
-    let root = BvhNode::construct(world.objects, 0);
+    let mut objects: Vec<Box<dyn Intersect>> = Vec::new();
+
+    for object in world.objects.into_iter() {
+        if let Some(inner_objs) = object.divide() {
+            objects.extend(inner_objs);
+        } else {
+            objects.push(object);
+        }
+    }
+
+    let root = BvhNode::construct(objects);
     // println!("{:?}", root);
 
 
