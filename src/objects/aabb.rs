@@ -50,8 +50,41 @@ impl Aabb {
         }
     }
 
-    pub fn null() -> Self {
-        Self { lower: Vec3::zero(), upper: Vec3::zero() }
+    pub fn centroid(&self) -> Vec3 {
+        (0.5 * self.lower) + (0.5 * self.upper)
     }
 
+    pub fn diagonal(&self) -> Vec3 {
+        self.upper - self.lower
+    }
+
+    pub fn area(&self) -> f64 {
+        let d = self.diagonal();
+        2.0 * (d.x * d.y + d.x * d.z + d.y * d.z)
+    }
+
+    pub fn max_extent(&self) -> usize {
+        let d = self.diagonal();
+        if d.x > d.y && d.x > d.z { 0 } 
+        else if d.y > d.z { 1 } 
+        else { 2 }
+    }
+
+    pub fn offset(&self, p: Vec3) -> Vec3 {
+        let mut o = p - self.lower;
+        if self.upper.x > self.lower.x { o.x /= self.upper.x - self.lower.x }
+        if self.upper.y > self.lower.y { o.y /= self.upper.y - self.lower.y }
+        if self.upper.z > self.lower.z { o.z /= self.upper.z - self.lower.z }
+        o
+    }
+
+    pub fn null() -> Self {
+        Self { lower: Vec3::inf(), upper: Vec3::neg_inf() }
+    }
+}
+
+impl Default for Aabb {
+    fn default() -> Self {
+        Self::null()
+    }
 }

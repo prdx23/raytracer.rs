@@ -25,6 +25,14 @@ impl Vec3 {
         Vec3 { x: 0.0, y: 0.0, z: 0.0 }
     }
 
+    pub fn inf() -> Vec3 {
+        Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY)
+    }
+
+    pub fn neg_inf() -> Vec3 {
+        Vec3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY)
+    }
+
     pub fn dot(&self, other: Self) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }

@@ -68,8 +68,9 @@ impl Intersect for Mesh {
     }
 
     fn bbox(&self) -> Aabb {
-        let mut lower = Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
-        let mut upper = Vec3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let mut lower = Vec3::inf();
+        let mut upper = Vec3::neg_inf();
+
         for vertex in self.vertices.iter() {
             for i in 0..3 {
                 if vertex[i] < lower[i] { lower[i] = vertex[i] }

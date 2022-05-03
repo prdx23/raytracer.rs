@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 
 use crate::Ray;
 use crate::behaviors::{ Intersect, IntersectResult };
@@ -12,6 +11,16 @@ pub struct BvhNode {
     pub right: Option<Box<BvhNode>>,
     pub bbox: Aabb,
 }
+
+
+const N_BUCKETS: usize = 12;
+
+#[derive(Debug, Default)]
+struct Bucket {
+    count: usize,
+    bbox: Aabb,
+}
+
 
 
 impl BvhNode {
@@ -32,67 +41,114 @@ impl BvhNode {
                 if let Some(objs) = object.subdivide(axis) {
                     return BvhNode::construct(objs, new_axis);
                 }
+                let bbox = object.bbox();
                 Self {
-                    bbox: object.bbox(),
+                    bbox,
                     left: None,
                     right: None,
                     object: Some(object),
                 }
             },
-            // 2 => {
-            //     let mut right = objects.pop().unwrap();
-            //     if let Some(objs) = right.subdivide(axis) {
-            //         right = Box::new(BvhNode::construct(objs, new_axis));
-            //     }
+            2 => {
+                let right = objects.pop().unwrap();
+                let left = objects.pop().unwrap();
 
-            //     let mut left = objects.pop().unwrap();
-            //     if let Some(objs) = left.subdivide(axis) {
-            //         left = Box::new(BvhNode::construct(objs, new_axis));
-            //     }
-
-            //     Self {
-            //         bbox: left.bbox().merge(right.bbox()),
-            //         left, right,
-            //     }
-            // },
-            len => {
-                match axis {
-                    0 => objects.sort_unstable_by(compare_x),
-                    1 => objects.sort_unstable_by(compare_y),
-                    _ => objects.sort_unstable_by(compare_z),
-                }
-
-                let right = BvhNode::construct(objects.split_off(len / 2), new_axis);
-                let left = BvhNode::construct(objects, new_axis);
+                let bbox = left.bbox().clone().merge(right.bbox().clone());
+                let left_node = BvhNode::construct(vec![left], new_axis);
+                let right_node = BvhNode::construct(vec![right], new_axis);
 
                 Self {
-                    bbox: left.bbox.clone().merge(right.bbox.clone()),
-                    left: Some(Box::new(left)),
-                    right: Some(Box::new(right)),
+                    bbox,
+                    left: Some(Box::new(left_node)),
+                    right: Some(Box::new(right_node)),
+                    object: None,
+                }
+            },
+            len => {
+
+                // calc combined obj aab and obj centroid aabb
+                let mut full_bounds: Aabb = Default::default();
+                let mut centroid_bounds: Aabb = Default::default();
+
+                for obj in objects.iter() {
+                    centroid_bounds = centroid_bounds.merge(
+                        Aabb {
+                            lower: obj.bbox().centroid(),
+                            upper: obj.bbox().centroid(),
+                        }
+                    );
+                    full_bounds = full_bounds.merge(obj.bbox().clone());
+                }
+
+                // pick dimention as longest centroid aabb span
+                let dim = centroid_bounds.max_extent();
+
+                // create N buckets and put each centroid into its bucket
+                let mut buckets: [Bucket; N_BUCKETS] = Default::default();
+                for obj in objects.iter() {
+                    let offset = centroid_bounds.offset(obj.bbox().centroid());
+                    let mut n = (offset[dim] * N_BUCKETS as f64) as usize;
+                    if n == N_BUCKETS { n -= 1 }
+                    buckets[n].count += 1;
+                    buckets[n].bbox = buckets[n].bbox.clone().merge(obj.bbox());
+                }
+
+
+                // for each bucket, calc area of all buckets before and after it
+                let mut costs: [f64; N_BUCKETS - 1] = Default::default();
+                for i in 0..(N_BUCKETS - 1) {
+                    let mut b0: Aabb = Default::default();
+                    let mut b1: Aabb = Default::default();
+                    let mut count0: usize = 0;
+                    let mut count1: usize = 0;
+
+                    for j in 0..(i + 1) {
+                        b0 = b0.merge(buckets[j].bbox.clone());
+                        count0 += buckets[j].count;
+                    }
+
+                    for j in (i + 1)..N_BUCKETS {
+                        b1 = b1.merge(buckets[j].bbox.clone());
+                        count1 += buckets[j].count;
+                    }
+
+                    let area0 = count0 as f64 * b0.area();
+                    let area1 = count1 as f64 * b1.area();
+                    costs[i] = 0.125 + (area0 + area1) / full_bounds.area();
+                }
+
+                // pick the bucket split that minimizes area
+                let mut min_cost = costs[0];
+                let mut min_cost_bucket: usize = 0;
+                for i in 0..(N_BUCKETS - 1) {
+                    if costs[i] < min_cost {
+                        min_cost = costs[i];
+                        min_cost_bucket = i;
+                    }
+                }
+
+                // divide objs into 2 using centroids with bucket split
+                let mut left_list: Vec<Box<dyn Intersect>> = Vec::with_capacity(len / 2);
+                let mut right_list: Vec<Box<dyn Intersect>> = Vec::with_capacity(len / 2);
+                for obj in objects.into_iter() {
+                    let offset = centroid_bounds.offset(obj.bbox().centroid());
+                    let n = (offset[dim] * N_BUCKETS as f64) as usize;
+                    if n <= min_cost_bucket {
+                        left_list.push(obj);
+                    } else {
+                        right_list.push(obj);
+                    }
+                }
+
+                Self {
+                    bbox: full_bounds,
+                    left: Some(Box::new(BvhNode::construct(left_list, new_axis))),
+                    right: Some(Box::new(BvhNode::construct(right_list, new_axis))),
                     object: None,
                 }
             }
         }
     }
-}
-
-
-fn compare(
-    obj1: &Box<dyn Intersect>, obj2: &Box<dyn Intersect>, axis: usize
-) -> Ordering {
-    obj1.bbox().lower[axis].partial_cmp(&obj2.bbox().lower[axis]).unwrap()
-}
-
-fn compare_x(obj1: &Box<dyn Intersect>, obj2: &Box<dyn Intersect>) -> Ordering {
-    compare(obj1, obj2, 0)
-}
-
-fn compare_y(obj1: &Box<dyn Intersect>, obj2: &Box<dyn Intersect>) -> Ordering {
-    compare(obj1, obj2, 1)
-}
-
-fn compare_z(obj1: &Box<dyn Intersect>, obj2: &Box<dyn Intersect>) -> Ordering {
-    compare(obj1, obj2, 2)
 }
 
 
