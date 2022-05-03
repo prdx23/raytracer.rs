@@ -16,7 +16,7 @@ impl Aabb {
     pub fn intersect(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> Option<f64> {
         unsafe { crate::INTERSECT_TESTS_AABB += 1; }
         for i in 0..3 {
-            let invd = 1.0 / ray.direction()[i];
+            let invd = ray.invd_cache()[i];
             let mut t0 = (self.lower[i] - ray.origin()[i]) * invd;
             let mut t1 = (self.upper[i] - ray.origin()[i]) * invd;
 
