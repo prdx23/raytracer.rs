@@ -1,15 +1,14 @@
-use std::rc::Rc;
 
 use crate::Ray;
 use crate::behaviors::{ Intersect, IntersectResult };
-use crate::objects::{ Aabb };
+use crate::objects::{ Aabb, Object };
 
 
 #[derive(Debug)]
 pub struct BvhNode {
-    pub object: Option<Box<dyn Intersect>>,
-    pub left: Option<Box<BvhNode>>,
-    pub right: Option<Box<BvhNode>>,
+    pub object: Option<usize>,
+    pub left: Option<usize>,
+    pub right: Option<usize>,
     pub bbox: Aabb,
 }
 
@@ -26,40 +25,45 @@ struct Bucket {
 
 impl BvhNode {
 
-    pub fn construct(mut objects: Vec<Box<dyn Intersect>>) -> Self {
-        match objects.len() {
+    pub fn construct(
+        mut primitives: Vec<Object>, objects: &mut Vec<Object>,
+        nodes: &mut Vec<BvhNode>
+    ) -> usize {
+
+        match primitives.len() {
             0 => {
-                Self {
+                nodes.push(Self {
                     object: None,
                     left: None,
                     right: None,
                     bbox: Aabb::null(),
-                }
+                })
             },
             1 => {
-                let object = objects.pop().unwrap();
+                let object = primitives.pop().unwrap();
                 let bbox = object.bbox();
-                Self {
+                objects.push(object);
+                nodes.push(Self {
                     bbox,
                     left: None,
                     right: None,
-                    object: Some(object),
-                }
+                    object: Some(objects.len() - 1),
+                })
             },
             2 => {
-                let right = objects.pop().unwrap();
-                let left = objects.pop().unwrap();
+                let right = primitives.pop().unwrap();
+                let left = primitives.pop().unwrap();
 
                 let bbox = left.bbox().clone().merge(right.bbox().clone());
-                let left_node = BvhNode::construct(vec![left]);
-                let right_node = BvhNode::construct(vec![right]);
+                let left_node = BvhNode::construct(vec![left], objects, nodes);
+                let right_node = BvhNode::construct(vec![right], objects, nodes);
 
-                Self {
+                nodes.push(Self {
                     bbox,
-                    left: Some(Box::new(left_node)),
-                    right: Some(Box::new(right_node)),
+                    left: Some(left_node),
+                    right: Some(right_node),
                     object: None,
-                }
+                });
             },
             len => {
 
@@ -67,7 +71,7 @@ impl BvhNode {
                 let mut full_bounds: Aabb = Default::default();
                 let mut centroid_bounds: Aabb = Default::default();
 
-                for obj in objects.iter() {
+                for obj in primitives.iter() {
                     centroid_bounds = centroid_bounds.merge(
                         Aabb {
                             lower: obj.bbox().centroid(),
@@ -82,7 +86,7 @@ impl BvhNode {
 
                 // create N buckets and put each centroid into its bucket
                 let mut buckets: [Bucket; N_BUCKETS] = Default::default();
-                for obj in objects.iter() {
+                for obj in primitives.iter() {
                     let offset = centroid_bounds.offset(obj.bbox().centroid());
                     let mut n = (offset[dim] * N_BUCKETS as f64) as usize;
                     if n == N_BUCKETS { n -= 1 }
@@ -125,9 +129,9 @@ impl BvhNode {
                 }
 
                 // divide objs into 2 using centroids with bucket split
-                let mut left_list: Vec<Box<dyn Intersect>> = Vec::with_capacity(len / 2);
-                let mut right_list: Vec<Box<dyn Intersect>> = Vec::with_capacity(len / 2);
-                for obj in objects.into_iter() {
+                let mut left_list: Vec<Object> = Vec::with_capacity(len / 2);
+                let mut right_list: Vec<Object> = Vec::with_capacity(len / 2);
+                for obj in primitives.into_iter() {
                     let offset = centroid_bounds.offset(obj.bbox().centroid());
                     let n = (offset[dim] * N_BUCKETS as f64) as usize;
                     if n <= min_cost_bucket {
@@ -137,87 +141,84 @@ impl BvhNode {
                     }
                 }
 
-                Self {
+                let left = BvhNode::construct(left_list, objects, nodes);
+                let right = BvhNode::construct(right_list, objects, nodes);
+                nodes.push(Self {
                     bbox: full_bounds,
-                    left: Some(Box::new(BvhNode::construct(left_list))),
-                    right: Some(Box::new(BvhNode::construct(right_list))),
+                    left: Some(left),
+                    right: Some(right),
                     object: None,
-                }
+                });
             }
         }
+        nodes.len() - 1
     }
 }
 
 
 impl BvhNode {
 
-    pub fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64)
-        -> Option<IntersectResult>
-    {
+    pub fn intersect(
+        &self, ray: &Ray, t_min: f64, t_max: f64, objects: &Box<[Object]>,
+        nodes: &Box<[BvhNode]>,
+    ) -> Option<IntersectResult> {
 
-        let mut left: &Box<BvhNode>;
-        let mut right: &Box<BvhNode>;
 
-        match (self.left.as_ref(), self.right.as_ref()) {
+        let l: usize;
+        let r: usize;
 
-            // leaf node
-            (None, None) => {
-                return match &self.object {
-                    Some(object) => object.intersect(ray, t_min, t_max),
-                    None => None,
-                }
+        if let (Some(left_i), Some(right_i)) = (self.left, self.right) {
+            l = left_i;
+            r = right_i;
+        } else {
+            return match self.object {
+                Some(object) => objects[object].intersect(ray, t_min, t_max),
+                None => None,
             }
-
-            (Some(l), Some(r)) => {
-                left = l;
-                right = r;
-            }
-
-            _ => {
-                panic!("One node of BvhNode is None while other is not");
-            }
-
         }
 
+        debug_assert!(l < nodes.len());
+        debug_assert!(r < nodes.len());
 
-        match left.bbox.intersect(ray, t_min, t_max) {
+        let mut left = unsafe { &nodes.get_unchecked(l) };
+        let mut right = unsafe { &nodes.get_unchecked(r) };
 
-            Some(left_t) => {
-                match right.bbox.intersect(ray, t_min, t_max) {
-                    Some(right_t) => {
+        let left_bbox_res = left.bbox.intersect(ray, t_min, t_max);
+        let right_bbox_res = right.bbox.intersect(ray, t_min, t_max);
 
-                        if left_t > right_t {
-                            // right is closer, so swap to check right first
-                            std::mem::swap(&mut left, &mut right);
+        match (left_bbox_res, right_bbox_res) {
+
+            (None, None) => {
+                None
+            },
+
+            (Some(_), None) => {
+                left.intersect(ray, t_min, t_max, objects, nodes)
+            },
+
+            (None, Some(_)) => {
+                right.intersect(ray, t_min, t_max, objects, nodes)
+            },
+
+            (Some(left_t), Some(right_t)) => {
+                if left_t > right_t {
+                    // right is closer, so swap to check right first
+                    std::mem::swap(&mut left, &mut right);
+                }
+
+                match left.intersect(ray, t_min, t_max, objects, nodes) {
+                    Some(left_res) => {
+                        match right.intersect(ray, t_min, left_res.t, objects, nodes) {
+                            Some(right_res) => return Some(right_res),
+                            None => return Some(left_res),
                         }
-
-                        match left.intersect(ray, t_min, t_max) {
-                            Some(left_res) => {
-                                match right.intersect(ray, t_min, left_res.t) {
-                                    Some(right_res) => return Some(right_res),
-                                    None => return Some(left_res),
-                                }
-                            },
-                            None => {
-                                return right.intersect(ray, t_min, t_max)
-                            },
-                        }
-
                     },
                     None => {
-                        return left.intersect(ray, t_min, t_max)
+                        return right.intersect(ray, t_min, t_max, objects, nodes)
                     },
                 }
-            },
-
-            None => {
-                if let Some(_) = right.bbox.intersect(ray, t_min, t_max) {
-                    return right.intersect(ray, t_min, t_max)
-                }
-            },
+            }
 
         }
-
-        None
     }
 }

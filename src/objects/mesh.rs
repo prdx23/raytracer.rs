@@ -5,7 +5,7 @@ use std::rc::Rc;
 use crate::Vec3;
 use crate::Ray;
 use crate::behaviors::{Intersect, IntersectResult};
-use crate::objects::{ Aabb, Triangle };
+use crate::objects::{ Aabb, Triangle, Object };
 
 
 #[derive(Debug, Clone)]
@@ -55,20 +55,20 @@ impl Intersect for Mesh {
         Aabb { lower, upper }
     }
 
-    fn divide(&self) -> Option<Vec<Box<dyn Intersect>>> {
-        let mut triangles: Vec<Box<dyn Intersect>> = Vec::with_capacity(
+    fn divide(&self) -> Option<Vec<Object>> {
+        let mut triangles: Vec<Object> = Vec::with_capacity(
             self.index_amt / 3
         );
 
         let amt = self.index_amt;
         let parent_mesh = Rc::new(self.clone());
         for i in (0..amt).step_by(3) {
-            triangles.push(Box::new(
+            triangles.push(
                 Triangle {
                     mesh: Rc::clone(&parent_mesh),
                     offset: i
-                }
-            ));
+                }.into()
+            );
         }
 
         Some(triangles)

@@ -3,7 +3,7 @@ use std::fmt;
 use crate::Vec3;
 use crate::Ray;
 use crate::behaviors::{Intersect, IntersectResult};
-use crate::objects::Aabb;
+use crate::objects::{ Aabb, Object };
 
 
 #[derive(Debug)]
@@ -54,7 +54,7 @@ impl Intersect for Sphere {
         }
     }
 
-    fn divide(&self) -> Option<Vec<Box<dyn Intersect>>> {
+    fn divide(&self) -> Option<Vec<Object>> {
         None
     }
 

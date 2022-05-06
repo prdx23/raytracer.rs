@@ -18,7 +18,7 @@ mod scenes;
 
 use crate::utils::{ Color, Vec3, Ray, pretty_print_int };
 use crate::behaviors::{ Intersect, Scatter };
-use crate::objects::BvhNode;
+use crate::objects::{ Object, BvhNode };
 use crate::materials::Material;
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
@@ -36,19 +36,24 @@ pub fn raytrace() {
     // let (camera, materials, world) = scenes::meshtest(ASPECT_RATIO, 0.0);
     // println!("{:#?}", &world);
 
-    let mut objects: Vec<Box<dyn Intersect>> = Vec::new();
+    let mut primitives: Vec<Object> = vec![];
 
     for object in world.into_iter() {
         if let Some(inner_objs) = object.divide() {
-            objects.extend(inner_objs);
+            primitives.extend(inner_objs);
         } else {
-            objects.push(object);
+            primitives.push(object);
         }
     }
 
-    let root = BvhNode::construct(objects);
+    let mut objects: Vec<Object> = vec![];
+    let mut nodes: Vec<BvhNode> = vec![];
+    let root = BvhNode::construct(primitives, &mut objects, &mut nodes);
     // println!("{:?}", root);
 
+    let objects = objects.into_boxed_slice();
+    let nodes = nodes.into_boxed_slice();
+    let materials = materials.into_boxed_slice();
 
     println!("Making primary rays");
     let mut rng = rand::thread_rng();
@@ -75,7 +80,7 @@ pub fn raytrace() {
     let mut colors: Vec<Vec3> = vec![Vec3::zero() ; WIDTH * HEIGHT];
     for (u, v, i) in rays {
         let ray = camera.get_ray(u, v);
-        colors[i] += ray_color(&root, &materials, ray, RAY_DEPTH);
+        colors[i] += ray_color(root, &objects, &materials, &nodes, ray, RAY_DEPTH);
     }
 
     println!("Making image buffer");
@@ -106,18 +111,20 @@ static T_MIN: f64 = 0.0001;
 static T_MAX: f64 = f64::INFINITY;
 
 
-fn ray_color(root: &BvhNode, materials: &Vec<Material>, ray: Ray, depth: usize) -> Vec3 {
+fn ray_color(root: usize, objects: &Box<[Object]>, materials: &Box<[Material]>, nodes: &Box<[BvhNode]>, ray: Ray, depth: usize) -> Vec3 {
 
     if depth <= 0 { return Vec3::zero() }
 
+    let node  = unsafe { nodes.get_unchecked(root) };
+
     // if let Some(_) = root.bbox().intersect(&ray, T_MIN, T_MAX) {
-        if let Some(result) = root.intersect(&ray, T_MIN, T_MAX) {
+        if let Some(result) = node.intersect(&ray, T_MIN, T_MAX, objects, nodes) {
             let material = &materials[result.material];
             let emitted = material.emit();
 
             match material.scatter(&ray, result) {
                 Some(r) => {
-                    let color = ray_color(&root, &materials, r.ray, depth - 1);
+                    let color = ray_color(root, &objects, &materials, &nodes, r.ray, depth - 1);
                     return emitted + r.attenuation * color
                 },
                 None => {

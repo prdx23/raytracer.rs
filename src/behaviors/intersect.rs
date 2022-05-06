@@ -2,15 +2,15 @@ use std::fmt;
 
 use crate::Vec3;
 use crate::Ray;
-use crate::objects::Aabb;
+use crate::objects::{ Aabb, Object };
 
-// use enum_dispatch::enum_dispatch;
+use enum_dispatch::enum_dispatch;
 
-// #[enum_dispatch(Object)]
+#[enum_dispatch(Object)]
 pub trait Intersect {
     fn intersect(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<IntersectResult>;
     fn bbox(&self) -> Aabb;
-    fn divide(&self) -> Option<Vec<Box<dyn Intersect>>>;
+    fn divide(&self) -> Option<Vec<Object>>;
     fn repr(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 }
 

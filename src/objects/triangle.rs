@@ -4,7 +4,7 @@ use std::rc::Rc;
 use crate::Vec3;
 use crate::Ray;
 use crate::behaviors::{Intersect, IntersectResult};
-use crate::objects::{ Aabb, Mesh };
+use crate::objects::{ Aabb, Mesh, Object };
 
 
 #[derive(Debug)]
@@ -57,7 +57,7 @@ impl Intersect for Triangle {
         Aabb { lower, upper }
     }
 
-    fn divide(&self) -> Option<Vec<Box<dyn Intersect>>> {
+    fn divide(&self) -> Option<Vec<Object>> {
         None
     }
 
