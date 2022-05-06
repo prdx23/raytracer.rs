@@ -1,10 +1,14 @@
 
 use crate::utils::{ Vec3, Color, Camera };
-use crate::objects::{ World, Sphere, Mesh, helpers };
-use crate::materials::{ Material, Lambertian, Metal, Dielectric, DiffuseLight };
+use crate::objects::{ Sphere, helpers };
+use crate::behaviors::{ Intersect };
+// use crate::materials::{ Material, Lambertian, Metal, Dielectric, DiffuseLight };
+use crate::materials::{ Material, Lambertian };
 
 
-pub fn meshtest(aspect_ratio: f64, dof: f64) -> (Camera, Vec<Material>, World) {
+pub fn meshtest(aspect_ratio: f64, dof: f64)
+    -> (Camera, Vec<Material>, Vec<Box<dyn Intersect>>)
+{
 
     // camera
     let look_from = Vec3::new(0.0, 3.5, 13.0);
@@ -31,10 +35,9 @@ pub fn meshtest(aspect_ratio: f64, dof: f64) -> (Camera, Vec<Material>, World) {
 
     // helpers::from_obj(String::from("teapot.obj"));
     // world
-    let mut world = World::new();
-    world.add(
-        helpers::from_obj(String::from("teapot.obj"), 0)
-    );
+    let world: Vec<Box<dyn Intersect>> = vec![
+
+        Box::new(helpers::from_obj(String::from("teapot.obj"), 0)),
 
     // world.add(Triangle {
     //     v0: Vec3::new(-1.0, -0.5, 0.0),
@@ -66,11 +69,11 @@ pub fn meshtest(aspect_ratio: f64, dof: f64) -> (Camera, Vec<Material>, World) {
     //     radius: 0.5,
     //     material: 0,
     // });
-    world.add(Sphere {
+    Box::new(Sphere {
         center: Vec3::new(0.0, -100.5, -1.0),
         radius: 100.0,
         material: 1,
-    });
+    }),
     // world.add(Sphere {
     //     center: Vec3::new(-1.3, 0.0, -1.0),
     //     radius: 0.5,
@@ -106,6 +109,7 @@ pub fn meshtest(aspect_ratio: f64, dof: f64) -> (Camera, Vec<Material>, World) {
     //     radius: 0.03,
     //     material: 8,
     // });
+    ];
 
     (camera, materials, world)
 }

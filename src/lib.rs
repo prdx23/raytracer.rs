@@ -21,23 +21,24 @@ use crate::behaviors::{ Intersect, Scatter };
 use crate::objects::BvhNode;
 use crate::materials::Material;
 
+const ASPECT_RATIO: f64 = 16.0 / 9.0;
+const WIDTH: usize = 800;
+const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
+const SAMPLES_PER_PIXEL: usize = 400;
+const RAY_DEPTH: usize = 50;
+// const N_THREADS: usize = 8;
+
+
 
 pub fn raytrace() {
 
-    let aspect_ratio = 16.0 / 9.0;
-    let width = 800;
-    let height = (width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel = 100;
-    let ray_depth = 50;
-
-
-    let (camera, materials, world) = scenes::spheres(aspect_ratio, 0.3);
-    // let (camera, materials, world) = scenes::meshtest(aspect_ratio, 0.0);
+    let (camera, materials, world) = scenes::spheres(ASPECT_RATIO, 0.3);
+    // let (camera, materials, world) = scenes::meshtest(ASPECT_RATIO, 0.0);
     // println!("{:#?}", &world);
 
     let mut objects: Vec<Box<dyn Intersect>> = Vec::new();
 
-    for object in world.objects.into_iter() {
+    for object in world.into_iter() {
         if let Some(inner_objs) = object.divide() {
             objects.extend(inner_objs);
         } else {
@@ -49,38 +50,44 @@ pub fn raytrace() {
     // println!("{:?}", root);
 
 
-    let mut buffer: Vec<Color> = vec![Color::black() ; width * height];
-
-
-    let mut i;
-    let mut u: f64;
-    let mut v: f64;
-
-    let mut ray: Ray;
-    let mut current_color: Vec3;
+    println!("Making primary rays");
     let mut rng = rand::thread_rng();
+    let mut rays: Vec<(f64, f64, usize)> = Vec::with_capacity(WIDTH * HEIGHT * SAMPLES_PER_PIXEL);
 
-    for h in (0..height).rev() {
-        for w in 0..width {
-            print!("\r Rendering line {}/{} ...", height - h - 1, height - 1);
+    for h in (0..HEIGHT).rev() {
+        for w in 0..WIDTH {
 
-            current_color = Vec3::zero();
-            for _ in 0..samples_per_pixel {
-                u = ((w as f64) + rng.gen::<f64>()) / width as f64;
-                v = ((h as f64) + rng.gen::<f64>()) / height as f64;
+            let i = ((HEIGHT - h - 1) * WIDTH) + w;
 
-                ray = camera.get_ray(u, v);
+            for _ in 0..SAMPLES_PER_PIXEL {
+                let u = ((w as f64) + rng.gen::<f64>()) / WIDTH as f64;
+                let v = ((h as f64) + rng.gen::<f64>()) / HEIGHT as f64;
+
                 unsafe { RAY_COUNT_PRIMARY += 1; }
-                current_color += ray_color(&root, &materials, ray, ray_depth);
+                rays.push((u, v, i));
             }
 
-            i = ((height - h - 1) * width) + w;
-            buffer[i] = Color::to_u8(current_color, samples_per_pixel);
         }
     }
+
+
+    println!("Intersecting primary rays");
+    let mut colors: Vec<Vec3> = vec![Vec3::zero() ; WIDTH * HEIGHT];
+    for (u, v, i) in rays {
+        let ray = camera.get_ray(u, v);
+        colors[i] += ray_color(&root, &materials, ray, RAY_DEPTH);
+    }
+
+    println!("Making image buffer");
+    let mut buffer: Vec<Color> = vec![Color::black() ; WIDTH * HEIGHT];
+    for (i, color) in colors.into_iter().enumerate() {
+        buffer[i] = Color::to_u8(color, SAMPLES_PER_PIXEL);
+    }
+
     println!();
 
-    utils::image_export("image.ppm", &buffer, width, height);
+    println!("Exporting image");
+    utils::image_export("image.ppm", &buffer, WIDTH, HEIGHT);
     println!("\n Image exported!");
 
     unsafe {

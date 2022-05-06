@@ -1,3 +1,4 @@
+use std::rc::Rc;
 
 use crate::Ray;
 use crate::behaviors::{ Intersect, IntersectResult };

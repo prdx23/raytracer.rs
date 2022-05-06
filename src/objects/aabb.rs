@@ -15,22 +15,44 @@ impl Aabb {
 
     pub fn intersect(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> Option<f64> {
         unsafe { crate::INTERSECT_TESTS_AABB += 1; }
-        for i in 0..3 {
-            let invd = ray.invd_cache()[i];
-            let mut t0 = (self.lower[i] - ray.origin()[i]) * invd;
-            let mut t1 = (self.upper[i] - ray.origin()[i]) * invd;
 
-            if invd < 0.0 {
-                std::mem::swap(&mut t0, &mut t1);
-            }
+        let origin = ray.origin();
+        let invd_cache = ray.invd_cache();
+        let lower = self.lower;
+        let upper = self.upper;
 
-            t_min = if t0 > t_min { t0 } else { t_min };
-            t_max = if t1 < t_max { t1 } else { t_max };
+        // x axis
+        let mut invd = invd_cache.x;
+        let mut t0 = (lower.x - origin.x) * invd;
+        let mut t1 = (upper.x - origin.x) * invd;
+        if invd < 0.0 { std::mem::swap(&mut t0, &mut t1); }
 
-            if t_max <= t_min {
-                return None
-            }
-        }
+        t_min = if t0 > t_min { t0 } else { t_min };
+        t_max = if t1 < t_max { t1 } else { t_max };
+        if t_max <= t_min { return None }
+
+
+        // y axis
+        invd = invd_cache.y;
+        t0 = (lower.y - origin.y) * invd;
+        t1 = (upper.y - origin.y) * invd;
+        if invd < 0.0 { std::mem::swap(&mut t0, &mut t1); }
+
+        t_min = if t0 > t_min { t0 } else { t_min };
+        t_max = if t1 < t_max { t1 } else { t_max };
+        if t_max <= t_min { return None }
+
+
+        // z axis
+        invd = invd_cache.z;
+        t0 = (lower.z - origin.z) * invd;
+        t1 = (upper.z - origin.z) * invd;
+        if invd < 0.0 { std::mem::swap(&mut t0, &mut t1); }
+
+        t_min = if t0 > t_min { t0 } else { t_min };
+        t_max = if t1 < t_max { t1 } else { t_max };
+        if t_max <= t_min { return None }
+
         unsafe { crate::INTERSECT_PASSES_AABB += 1; }
         return Some(t_min)
     }

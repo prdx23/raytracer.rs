@@ -223,11 +223,12 @@ impl DivAssign<f64> for Vec3 {
 impl Index<usize> for Vec3 {
     type Output = f64;
     fn index(&self, i: usize) -> &f64 {
+        debug_assert!(i < 3);
         match i {
             0 => &self.x,
             1 => &self.y,
-            2 => &self.z,
-            _ => panic!("Out of bounds for vector"),
+            _ => &self.z,
+            // _ => panic!("Out of bounds for vector"),
         }
     }
 }
@@ -235,11 +236,12 @@ impl Index<usize> for Vec3 {
 
 impl IndexMut<usize> for Vec3 {
     fn index_mut(&mut self, i: usize) -> &mut f64 {
+        debug_assert!(i < 3);
         match i {
             0 => &mut self.x,
             1 => &mut self.y,
-            2 => &mut self.z,
-            _ => panic!("Out of bounds for vector"),
+            _ => &mut self.z,
+            // _ => panic!("Out of bounds for vector"),
         }
     }
 }
