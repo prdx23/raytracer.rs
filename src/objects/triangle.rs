@@ -1,5 +1,5 @@
 use std::fmt;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::Vec3;
 use crate::Ray;
@@ -9,7 +9,7 @@ use crate::objects::{ Aabb, Mesh, Object };
 
 #[derive(Debug)]
 pub struct Triangle {
-    pub mesh: Rc<Mesh>,
+    pub mesh: Arc<Mesh>,
     pub offset: usize,
 }
 

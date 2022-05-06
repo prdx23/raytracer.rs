@@ -1,6 +1,6 @@
 use core::f64;
 use std::fmt;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::Vec3;
 use crate::Ray;
@@ -61,11 +61,11 @@ impl Intersect for Mesh {
         );
 
         let amt = self.index_amt;
-        let parent_mesh = Rc::new(self.clone());
+        let parent_mesh = Arc::new(self.clone());
         for i in (0..amt).step_by(3) {
             triangles.push(
                 Triangle {
-                    mesh: Rc::clone(&parent_mesh),
+                    mesh: Arc::clone(&parent_mesh),
                     offset: i
                 }.into()
             );

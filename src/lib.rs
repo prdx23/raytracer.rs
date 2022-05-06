@@ -1,3 +1,6 @@
+use std::thread;
+use std::sync::{Arc};
+
 use rand::Rng;
 
 static mut RAY_COUNT: u128 = 0;
@@ -16,7 +19,7 @@ mod materials;
 mod scenes;
 
 
-use crate::utils::{ Color, Vec3, Ray, pretty_print_int };
+use crate::utils::{ Color, Vec3, Ray, Camera, pretty_print_int };
 use crate::behaviors::{ Intersect, Scatter };
 use crate::objects::{ Object, BvhNode };
 use crate::materials::Material;
@@ -24,9 +27,9 @@ use crate::materials::Material;
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const WIDTH: usize = 800;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: usize = 400;
+const SAMPLES_PER_PIXEL: usize = 100;
 const RAY_DEPTH: usize = 50;
-// const N_THREADS: usize = 8;
+const N_THREADS: usize = 8;
 
 
 
@@ -77,11 +80,9 @@ pub fn raytrace() {
 
 
     println!("Intersecting primary rays");
-    let mut colors: Vec<Vec3> = vec![Vec3::zero() ; WIDTH * HEIGHT];
-    for (u, v, i) in rays {
-        let ray = camera.get_ray(u, v);
-        colors[i] += ray_color(root, &objects, &materials, &nodes, ray, RAY_DEPTH);
-    }
+    let colors: Vec<Vec3> = raytrace_parallel(
+        root, camera, objects, materials, nodes, rays
+    );
 
     println!("Making image buffer");
     let mut buffer: Vec<Color> = vec![Color::black() ; WIDTH * HEIGHT];
@@ -111,7 +112,7 @@ static T_MIN: f64 = 0.0001;
 static T_MAX: f64 = f64::INFINITY;
 
 
-fn ray_color(root: usize, objects: &Box<[Object]>, materials: &Box<[Material]>, nodes: &Box<[BvhNode]>, ray: Ray, depth: usize) -> Vec3 {
+fn ray_color(root: usize, objects: &Arc<Box<[Object]>>, materials: &Arc<Box<[Material]>>, nodes: &Arc<Box<[BvhNode]>>, ray: Ray, depth: usize) -> Vec3 {
 
     if depth <= 0 { return Vec3::zero() }
 
@@ -124,7 +125,7 @@ fn ray_color(root: usize, objects: &Box<[Object]>, materials: &Box<[Material]>, 
 
             match material.scatter(&ray, result) {
                 Some(r) => {
-                    let color = ray_color(root, &objects, &materials, &nodes, r.ray, depth - 1);
+                    let color = ray_color(root, objects, materials, nodes, r.ray, depth - 1);
                     return emitted + r.attenuation * color
                 },
                 None => {
@@ -144,4 +145,52 @@ fn ray_color(root: usize, objects: &Box<[Object]>, materials: &Box<[Material]>, 
         utils::lerp(1.0, 1.0, t),
     // ) * 0.001
     )
+}
+
+
+fn raytrace_parallel(
+    root: usize, camera: Camera,
+    objects: Box<[Object]>, materials: Box<[Material]>,
+    nodes: Box<[BvhNode]>, rays: Vec<(f64, f64, usize)>
+) -> Vec<Vec3> {
+
+
+    let mut handles = vec![];
+
+    let camera = Arc::new(camera);
+    let objects = Arc::new(objects);
+    let materials = Arc::new(materials);
+    let nodes = Arc::new(nodes);
+
+    for chunk in rays
+        .chunks(rays.len() / N_THREADS)
+        .map(|x| x.into())
+        .collect::<Vec<Vec<(f64, f64, usize)>>>()
+    {
+
+        let camera = Arc::clone(&camera);
+        let objects = Arc::clone(&objects);
+        let materials = Arc::clone(&materials);
+        let nodes = Arc::clone(&nodes);
+
+        handles.push(thread::spawn(move || {
+            let mut colors = vec![];
+            for (u, v, i) in chunk {
+                let ray = camera.get_ray(u, v);
+                colors.push((ray_color(root, &objects, &materials, &nodes, ray, RAY_DEPTH), i));
+            }
+            colors
+        }));
+    }
+
+    let mut colors: Vec<Vec3> = vec![Vec3::zero(); WIDTH * HEIGHT];
+
+    for (i, handle) in handles.into_iter().enumerate() {
+        for (color, i) in handle.join().unwrap() {
+            colors[i] += color;
+        }
+        println!("thread done - {}", i);
+    }
+
+    colors
 }
