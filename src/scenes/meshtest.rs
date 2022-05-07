@@ -1,7 +1,6 @@
 
 use crate::utils::{ Vec3, Color, Camera };
 use crate::objects::{ Object, Sphere, helpers };
-use crate::behaviors::{ Intersect };
 // use crate::materials::{ Material, Lambertian, Metal, Dielectric, DiffuseLight };
 use crate::materials::{ Material, Lambertian };
 

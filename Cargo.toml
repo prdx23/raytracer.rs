@@ -7,8 +7,10 @@ edition = "2021"
 
 [dependencies]
 enum_dispatch = "0.3.8"
-rand = "0.8.5"
-# rand = { version = "0.8.5", features = ["small_rng"] }
+# crossbeam = "0.8.1"
+rayon = "1.5.2"
+# rand = "0.8.5"
+rand = { version = "0.8.5", features = ["small_rng"] }
 # rand = { version = "0.8.5", features = ["small_rng", "getrandom"], default-features = false }
 
 
@@ -17,3 +19,5 @@ rand = "0.8.5"
 
 [profile.release]
 debug = true
+panic = "abort"
+lto = true

@@ -1,5 +1,4 @@
-use std::thread;
-use std::sync::{Arc};
+use rayon::prelude::*;
 
 use rand::Rng;
 
@@ -19,7 +18,7 @@ mod materials;
 mod scenes;
 
 
-use crate::utils::{ Color, Vec3, Ray, Camera, pretty_print_int };
+use crate::utils::{ Color, Vec3, Ray, pretty_print_int };
 use crate::behaviors::{ Intersect, Scatter };
 use crate::objects::{ Object, BvhNode };
 use crate::materials::Material;
@@ -29,7 +28,6 @@ const WIDTH: usize = 800;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
 const SAMPLES_PER_PIXEL: usize = 100;
 const RAY_DEPTH: usize = 50;
-const N_THREADS: usize = 8;
 
 
 
@@ -54,41 +52,36 @@ pub fn raytrace() {
     let root = BvhNode::construct(primitives, &mut objects, &mut nodes);
     // println!("{:?}", root);
 
-    let objects = objects.into_boxed_slice();
-    let nodes = nodes.into_boxed_slice();
-    let materials = materials.into_boxed_slice();
 
-    println!("Making primary rays");
-    let mut rng = rand::thread_rng();
-    let mut rays: Vec<(f64, f64, usize)> = Vec::with_capacity(WIDTH * HEIGHT * SAMPLES_PER_PIXEL);
-
-    for h in (0..HEIGHT).rev() {
-        for w in 0..WIDTH {
-
-            let i = ((HEIGHT - h - 1) * WIDTH) + w;
-
-            for _ in 0..SAMPLES_PER_PIXEL {
-                let u = ((w as f64) + rng.gen::<f64>()) / WIDTH as f64;
-                let v = ((h as f64) + rng.gen::<f64>()) / HEIGHT as f64;
-
-                unsafe { RAY_COUNT_PRIMARY += 1; }
-                rays.push((u, v, i));
-            }
-
-        }
-    }
-
-
-    println!("Intersecting primary rays");
-    let colors: Vec<Vec3> = raytrace_parallel(
-        root, camera, objects, materials, nodes, rays
-    );
-
-    println!("Making image buffer");
     let mut buffer: Vec<Color> = vec![Color::black() ; WIDTH * HEIGHT];
-    for (i, color) in colors.into_iter().enumerate() {
-        buffer[i] = Color::to_u8(color, SAMPLES_PER_PIXEL);
-    }
+
+    buffer
+        .par_iter_mut()
+        .enumerate()
+        .for_each(|(i, x)| {
+            let mut rng = rand::thread_rng();
+            let w = (i % WIDTH) as f64;
+            let h = (HEIGHT - (i / WIDTH) - 1) as f64;
+
+            let color: Vec3 = (&mut rng)
+                .sample_iter(rand::distributions::Standard)
+                .take(SAMPLES_PER_PIXEL)
+                .collect::<Vec<(f64, f64)>>()
+                .into_par_iter()
+                .fold(|| Vec3::zero(), |c, (a, b)| {
+
+                    let u = (w + a) / WIDTH as f64;
+                    let v = (h + b) / HEIGHT as f64;
+
+                    // unsafe { RAY_COUNT_PRIMARY += 1; }
+
+                    let ray = camera.get_ray(u, v);
+                    c + ray_color(root, &objects, &materials, &nodes, ray, RAY_DEPTH)
+                })
+                .reduce(|| Vec3::zero(), |acc, cur| acc + cur);
+
+            *x = Color::to_u8(color, SAMPLES_PER_PIXEL);
+        });
 
     println!();
 
@@ -112,7 +105,7 @@ static T_MIN: f64 = 0.0001;
 static T_MAX: f64 = f64::INFINITY;
 
 
-fn ray_color(root: usize, objects: &Arc<Box<[Object]>>, materials: &Arc<Box<[Material]>>, nodes: &Arc<Box<[BvhNode]>>, ray: Ray, depth: usize) -> Vec3 {
+fn ray_color(root: usize, objects: &[Object], materials: &[Material], nodes: &[BvhNode], ray: Ray, depth: usize) -> Vec3 {
 
     if depth <= 0 { return Vec3::zero() }
 
@@ -145,52 +138,4 @@ fn ray_color(root: usize, objects: &Arc<Box<[Object]>>, materials: &Arc<Box<[Mat
         utils::lerp(1.0, 1.0, t),
     // ) * 0.001
     )
-}
-
-
-fn raytrace_parallel(
-    root: usize, camera: Camera,
-    objects: Box<[Object]>, materials: Box<[Material]>,
-    nodes: Box<[BvhNode]>, rays: Vec<(f64, f64, usize)>
-) -> Vec<Vec3> {
-
-
-    let mut handles = vec![];
-
-    let camera = Arc::new(camera);
-    let objects = Arc::new(objects);
-    let materials = Arc::new(materials);
-    let nodes = Arc::new(nodes);
-
-    for chunk in rays
-        .chunks(rays.len() / N_THREADS)
-        .map(|x| x.into())
-        .collect::<Vec<Vec<(f64, f64, usize)>>>()
-    {
-
-        let camera = Arc::clone(&camera);
-        let objects = Arc::clone(&objects);
-        let materials = Arc::clone(&materials);
-        let nodes = Arc::clone(&nodes);
-
-        handles.push(thread::spawn(move || {
-            let mut colors = vec![];
-            for (u, v, i) in chunk {
-                let ray = camera.get_ray(u, v);
-                colors.push((ray_color(root, &objects, &materials, &nodes, ray, RAY_DEPTH), i));
-            }
-            colors
-        }));
-    }
-
-    let mut colors: Vec<Vec3> = vec![Vec3::zero(); WIDTH * HEIGHT];
-
-    for (i, handle) in handles.into_iter().enumerate() {
-        for (color, i) in handle.join().unwrap() {
-            colors[i] += color;
-        }
-        println!("thread done - {}", i);
-    }
-
-    colors
 }

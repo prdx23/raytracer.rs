@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use crate::Ray;
 use crate::behaviors::{ Intersect, IntersectResult };
@@ -160,8 +159,8 @@ impl BvhNode {
 impl BvhNode {
 
     pub fn intersect(
-        &self, ray: &Ray, t_min: f64, t_max: f64, objects: &Arc<Box<[Object]>>,
-        nodes: &Arc<Box<[BvhNode]>>,
+        &self, ray: &Ray, t_min: f64, t_max: f64, objects: &[Object],
+        nodes: &[BvhNode],
     ) -> Option<IntersectResult> {
 
 
