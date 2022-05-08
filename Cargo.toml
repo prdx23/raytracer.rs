@@ -20,4 +20,4 @@ rand = { version = "0.8.5", features = ["small_rng"] }
 [profile.release]
 debug = true
 panic = "abort"
-lto = true
+# lto = true

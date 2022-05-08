@@ -27,14 +27,16 @@ const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const WIDTH: usize = 800;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
 const SAMPLES_PER_PIXEL: usize = 100;
-const RAY_DEPTH: usize = 50;
+const RAY_DEPTH: usize = 150;
+const MULTICORE: bool = false;
 
 
 
 pub fn raytrace() {
 
-    let (camera, materials, world) = scenes::spheres(ASPECT_RATIO, 0.3);
-    // let (camera, materials, world) = scenes::meshtest(ASPECT_RATIO, 0.0);
+    // let (camera, materials, world) = scenes::spheres(ASPECT_RATIO, 0.3);
+    // let (camera, materials, world) = scenes::meshtest(ASPECT_RATIO, 0.2);
+    let (camera, materials, world) = scenes::teapot_with_lights(ASPECT_RATIO, 0.15);
     // println!("{:#?}", &world);
 
     let mut primitives: Vec<Object> = vec![];
@@ -55,34 +57,83 @@ pub fn raytrace() {
 
     let mut buffer: Vec<Color> = vec![Color::black() ; WIDTH * HEIGHT];
 
-    buffer
-        .par_iter_mut()
-        .enumerate()
-        .for_each(|(i, x)| {
-            let mut rng = rand::thread_rng();
-            let w = (i % WIDTH) as f64;
-            let h = (HEIGHT - (i / WIDTH) - 1) as f64;
+    println!("Starting Render...");
+    if !MULTICORE {
+        buffer
+            .iter_mut()
+            .enumerate()
+            .for_each(|(i, x)| {
+                let mut rng = rand::thread_rng();
+                let w = (i % WIDTH) as f64;
+                let h = (HEIGHT - (i / WIDTH) - 1) as f64;
 
-            let color: Vec3 = (&mut rng)
-                .sample_iter(rand::distributions::Standard)
-                .take(SAMPLES_PER_PIXEL)
-                .collect::<Vec<(f64, f64)>>()
-                .into_par_iter()
-                .fold(|| Vec3::zero(), |c, (a, b)| {
+                print!(
+                    "\r Rendering line {}/{} ...", 
+                    HEIGHT - h as usize - 1, HEIGHT - 1
+                );
 
-                    let u = (w + a) / WIDTH as f64;
-                    let v = (h + b) / HEIGHT as f64;
+                let color: Vec3 = (&mut rng)
+                    .sample_iter(rand::distributions::Standard)
+                    .take(SAMPLES_PER_PIXEL)
+                    .collect::<Vec<(f64, f64)>>()
+                    .into_iter()
+                    .fold(Vec3::zero(), |c, (a, b)| {
+                        let u = (w + a) / WIDTH as f64;
+                        let v = (h + b) / HEIGHT as f64;
 
-                    // unsafe { RAY_COUNT_PRIMARY += 1; }
+                        unsafe { RAY_COUNT_PRIMARY += 1; }
 
-                    let ray = camera.get_ray(u, v);
-                    c + ray_color(root, &objects, &materials, &nodes, ray, RAY_DEPTH)
-                })
-                .reduce(|| Vec3::zero(), |acc, cur| acc + cur);
+                        let ray = camera.get_ray(u, v);
+                        let col = ray_color(
+                            root, &objects, &materials, &nodes,
+                            ray, RAY_DEPTH
+                        );
 
-            *x = Color::to_u8(color, SAMPLES_PER_PIXEL);
-        });
+                        c + col
+                    });
 
+                *x = Color::to_u8(color, SAMPLES_PER_PIXEL);
+            });
+    } else {
+
+        buffer
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(i, x)| {
+                let mut rng = rand::thread_rng();
+                let w = (i % WIDTH) as f64;
+                let h = (HEIGHT - (i / WIDTH) - 1) as f64;
+
+                // print!(
+                //     "\r Rendering line {}/{} ...", 
+                //     HEIGHT - h as usize - 1, HEIGHT - 1
+                // );
+
+                let color: Vec3 = (&mut rng)
+                    .sample_iter(rand::distributions::Standard)
+                    .take(SAMPLES_PER_PIXEL)
+                    .collect::<Vec<(f64, f64)>>()
+                    .into_par_iter()
+                    .fold(|| Vec3::zero(), |c, (a, b)| {
+
+                        let u = (w + a) / WIDTH as f64;
+                        let v = (h + b) / HEIGHT as f64;
+
+                        unsafe { RAY_COUNT_PRIMARY += 1; }
+
+                        let ray = camera.get_ray(u, v);
+                        let col = ray_color(
+                            root, &objects, &materials, &nodes,
+                            ray, RAY_DEPTH
+                        );
+
+                        c + col
+                    })
+                    .reduce(|| Vec3::zero(), |acc, cur| acc + cur);
+
+                *x = Color::to_u8(color, SAMPLES_PER_PIXEL);
+            });
+    }
     println!();
 
     println!("Exporting image");
@@ -105,37 +156,43 @@ static T_MIN: f64 = 0.0001;
 static T_MAX: f64 = f64::INFINITY;
 
 
-fn ray_color(root: usize, objects: &[Object], materials: &[Material], nodes: &[BvhNode], ray: Ray, depth: usize) -> Vec3 {
+fn ray_color(
+    root: usize, objects: &[Object], materials: &[Material],
+    nodes: &[BvhNode], ray: Ray, depth: usize
+) -> Vec3 {
 
     if depth <= 0 { return Vec3::zero() }
 
-    let node  = unsafe { nodes.get_unchecked(root) };
+    debug_assert!(root < nodes.len());
+    let node = unsafe { nodes.get_unchecked(root) };
 
-    // if let Some(_) = root.bbox().intersect(&ray, T_MIN, T_MAX) {
-        if let Some(result) = node.intersect(&ray, T_MIN, T_MAX, objects, nodes) {
-            let material = &materials[result.material];
-            let emitted = material.emit();
+    if let Some(result) = node.intersect(&ray, T_MIN, T_MAX, objects, nodes) {
+        let material = &materials[result.material];
+        let emitted = material.emit();
 
-            match material.scatter(&ray, result) {
-                Some(r) => {
-                    let color = ray_color(root, objects, materials, nodes, r.ray, depth - 1);
-                    return emitted + r.attenuation * color
-                },
-                None => {
-                    return emitted
-                }
+        match material.scatter(&ray, result) {
+            Some(r) => {
+                let color = ray_color(
+                    root, objects, materials, nodes, r.ray, depth - 1
+                );
+                return emitted + r.attenuation * color
+            },
+            None => {
+                return emitted
             }
         }
-    // }
+    }
 
+    // Vec3::new(1.0, 1.0, 1.0)
+    Vec3::new(0.001, 0.001, 0.001)
     // Vec3::zero()
-    let unit_direction = ray.direction().unit();
-    let t = 0.5 * (unit_direction.y + 1.0);
+    // let unit_direction = ray.direction().unit();
+    // let t = 0.5 * (unit_direction.y + 1.0);
 
-    Vec3::new(
-        utils::lerp(1.0, 0.5, t),
-        utils::lerp(1.0, 0.7, t),
-        utils::lerp(1.0, 1.0, t),
-    // ) * 0.001
-    )
+    // Vec3::new(
+    //     utils::lerp(1.0, 0.5, t),
+    //     utils::lerp(1.0, 0.7, t),
+    //     utils::lerp(1.0, 1.0, t),
+    // // ) * 0.001
+    // )
 }

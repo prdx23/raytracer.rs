@@ -11,7 +11,8 @@ use crate::objects::{ Aabb, Triangle, Object };
 #[derive(Debug, Clone)]
 pub struct Mesh {
     pub vertices: Vec<Vec3>,
-    pub indices: Vec<usize>,
+    pub normals: Vec<Vec3>,
+    pub indexes: Vec<(usize, usize)>,
     pub index_amt: usize,
     // normal: Vec3,
     pub material: usize,
@@ -19,15 +20,18 @@ pub struct Mesh {
 
 impl Mesh {
 
-    pub fn new(vertices: Vec<Vec3>, indices: Vec<usize>, mat: usize) -> Self {
+    pub fn new(
+        vertices: Vec<Vec3>, indexes: Vec<(usize, usize)>,
+        normals: Vec<Vec3>, mat: usize
+    ) -> Self {
 
-        let index_amt = indices.len();
+        let index_amt = indexes.len();
         if index_amt % 3 != 0 {
             panic!("not enough indices for triangle in mesh");
         }
 
         Self {
-            index_amt, vertices, indices,
+            index_amt, vertices, indexes, normals,
             material: mat,
             // normal: Vec3::zero(),
         }
