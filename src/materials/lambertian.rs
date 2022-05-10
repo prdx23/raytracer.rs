@@ -40,11 +40,11 @@ impl Scatter for Lambertian {
 
         let scattered_ray = match scatter_dir.near_zero() {
             true => Ray::new(
-                result.point,
+                result.point + (crate::BIAS * result.normal),
                 result.normal,
             ),
             false => Ray::new(
-                result.point,
+                result.point + (crate::BIAS * result.normal),
                 scatter_dir,
             ),
         };

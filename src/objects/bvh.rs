@@ -50,21 +50,21 @@ impl BvhNode {
                     object: Some(objects.len() - 1),
                 })
             },
-            2 => {
-                let right = primitives.pop().unwrap();
-                let left = primitives.pop().unwrap();
+            // 2 => {
+            //     let right = primitives.pop().unwrap();
+            //     let left = primitives.pop().unwrap();
 
-                let bbox = left.bbox().clone().merge(right.bbox().clone());
-                let left_node = BvhNode::construct(vec![left], objects, nodes);
-                let right_node = BvhNode::construct(vec![right], objects, nodes);
+            //     let bbox = left.bbox().clone().merge(right.bbox().clone());
+            //     let left_node = BvhNode::construct(vec![left], objects, nodes);
+            //     let right_node = BvhNode::construct(vec![right], objects, nodes);
 
-                nodes.push(Self {
-                    bbox,
-                    left: Some(left_node),
-                    right: Some(right_node),
-                    object: None,
-                });
-            },
+            //     nodes.push(Self {
+            //         bbox,
+            //         left: Some(left_node),
+            //         right: Some(right_node),
+            //         object: None,
+            //     });
+            // },
             len => {
 
                 // calc combined obj aab and obj centroid aabb
@@ -139,6 +139,15 @@ impl BvhNode {
                     } else {
                         right_list.push(obj);
                     }
+                }
+
+                if left_list.len() == 0 || right_list.len() == 0 {
+                    // one of the lists was 0, split evenly
+                    let mut combined = vec![];
+                    combined.extend(left_list.into_iter());
+                    combined.extend(right_list.into_iter());
+                    right_list = combined.split_off(combined.len() / 2);
+                    left_list = combined.into_iter().collect();
                 }
 
                 let left = BvhNode::construct(left_list, objects, nodes);

@@ -39,15 +39,21 @@ impl Scatter for Dielectric {
         let schlick_approx = reflectance(cos_theta, refraction_ratio);
         let mut rng = rand::thread_rng();
 
-        let dir = match cannot_refract || (schlick_approx > rng.gen::<f64>()) {
+        let should_reflect = cannot_refract || (schlick_approx > rng.gen::<f64>());
+        let dir = match should_reflect {
             true => Vec3::reflect(ray_dir, result.normal),
             false => Vec3::refract(ray_dir, result.normal, refraction_ratio),
+        };
+
+        let origin = match should_reflect {
+            true => result.point + (crate::BIAS * result.normal),
+            false => result.point - (crate::BIAS * result.normal),
         };
 
         // let reflected_ray = Ray { origin: result.point, direction: dir };
         Some(ScatterResult {
             // ray: Ray { origin: result.point, direction: dir },
-            ray: Ray::new(result.point, dir),
+            ray: Ray::new(origin, dir),
             attenuation: Vec3::new(1.0, 1.0, 1.0),
         })
     }

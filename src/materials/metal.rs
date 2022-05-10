@@ -50,7 +50,10 @@ impl Scatter for Metal {
         //     direction: reflect_dir,
         // };
 
-        let reflected_ray = Ray::new(result.point, reflect_dir);
+        let reflected_ray = Ray::new(
+            result.point + (crate::BIAS * result.normal),
+            reflect_dir
+        );
 
         match reflected_ray.direction().dot(result.normal) > 0.0 {
             true => Some(ScatterResult {
