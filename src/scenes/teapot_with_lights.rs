@@ -4,6 +4,7 @@ use crate::objects::{ Object, Sphere, helpers };
 use crate::materials::{ Material, Lambertian, Metal, Dielectric, DiffuseLight };
 
 
+#[allow(dead_code)]
 pub fn teapot_with_lights(aspect_ratio: f64, dof: f64)
     -> (Camera, Vec<Material>, Vec<Object>)
 {
@@ -39,9 +40,15 @@ pub fn teapot_with_lights(aspect_ratio: f64, dof: f64)
 
     ];
 
+    let teapot = helpers::from_obj(String::from("teapot.obj"), 1);
+    // teapot.translate(0.5, 0.0, 0.0);
+    // teapot.scale_y(2.0);
+    // teapot.rotate_z(45.0);
+    // teapot.rotate_y(15.0);
+
     let world: Vec<Object> = vec![
 
-        helpers::from_obj(String::from("teapot.obj"), 1).into(),
+        teapot.into(),
 
         // table surface
         helpers::rect_hor(

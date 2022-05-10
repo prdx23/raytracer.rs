@@ -1,10 +1,12 @@
 
 use crate::utils::{ Vec3, Color, Camera };
 use crate::objects::{ Object, Sphere, helpers };
-use crate::materials::{ Material, Lambertian, Metal, Dielectric, DiffuseLight };
+// use crate::materials::{ Material, Lambertian, Metal, Dielectric, DiffuseLight };
+use crate::materials::{ Material, Lambertian, DiffuseLight };
 
 use rand::{Rng, SeedableRng};
 
+#[allow(dead_code)]
 pub fn cubes(aspect_ratio: f64, dof: f64)
     -> (Camera, Vec<Material>, Vec<Object>)
 {

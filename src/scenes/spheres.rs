@@ -5,6 +5,7 @@ use crate::objects::{ Object, Sphere };
 use crate::materials::{ Material, Lambertian, Metal, Dielectric, DiffuseLight };
 
 
+#[allow(dead_code)]
 pub fn spheres(aspect_ratio: f64, dof: f64)
     -> (Camera, Vec<Material>, Vec<Object>)
 {

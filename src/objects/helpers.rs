@@ -3,7 +3,7 @@ use std::fs;
 use crate::Vec3;
 use crate::objects::Mesh;
 
-
+#[allow(dead_code)]
 pub fn rect_ver(v0: Vec3, v1: Vec3, mat: usize) -> Mesh {
     Mesh::new(
         vec![
@@ -18,6 +18,7 @@ pub fn rect_ver(v0: Vec3, v1: Vec3, mat: usize) -> Mesh {
     )
 }
 
+#[allow(dead_code)]
 pub fn rect_hor(v0: Vec3, v1: Vec3, mat: usize) -> Mesh {
     Mesh::new(
         vec![
@@ -32,6 +33,7 @@ pub fn rect_hor(v0: Vec3, v1: Vec3, mat: usize) -> Mesh {
     )
 }
 
+#[allow(dead_code)]
 pub fn rect_hor_rev(v0: Vec3, v1: Vec3, mat: usize) -> Mesh {
     Mesh::new(
         vec![
@@ -46,6 +48,7 @@ pub fn rect_hor_rev(v0: Vec3, v1: Vec3, mat: usize) -> Mesh {
     )
 }
 
+#[allow(dead_code)]
 pub fn cuboid(p: Vec3, l: f64, h: f64, b: f64, mat: usize) -> Mesh {
     Mesh::new(
         vec![

@@ -2,8 +2,7 @@ use core::f64;
 use std::fmt;
 use std::sync::Arc;
 
-use crate::Vec3;
-use crate::Ray;
+use crate::{ Vec3, Ray, Matrix4 };
 use crate::behaviors::{Intersect, IntersectResult};
 use crate::objects::{ Aabb, Triangle, Object };
 
@@ -35,6 +34,59 @@ impl Mesh {
             material: mat,
             // normal: Vec3::zero(),
         }
+    }
+
+    #[allow(dead_code)]
+    pub fn transform(&mut self, matrix: Matrix4) {
+        let normal_matrix = matrix.inverse().transpose();
+
+        for vertex in self.vertices.iter_mut() {
+            *vertex = matrix * (*vertex);
+        }
+
+        for normal in self.normals.iter_mut() {
+            *normal = normal_matrix * (*normal);
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn translate(&mut self, tx: f64, ty: f64, tz: f64) {
+        self.transform(Matrix4::translate(tx, ty, tz));
+    }
+
+    #[allow(dead_code)]
+    pub fn scale(&mut self, sx: f64, sy: f64, sz: f64) {
+        self.transform(Matrix4::scale(sx, sy, sz));
+    }
+
+    #[allow(dead_code)]
+    pub fn scale_x(&mut self, sx: f64) {
+        self.transform(Matrix4::scale(sx, 1.0, 1.0));
+    }
+
+    #[allow(dead_code)]
+    pub fn scale_y(&mut self, sy: f64) {
+        self.transform(Matrix4::scale(1.0, sy, 1.0));
+    }
+
+    #[allow(dead_code)]
+    pub fn scale_z(&mut self, sz: f64) {
+        self.transform(Matrix4::scale(1.0, 1.0, sz));
+    }
+
+    #[allow(dead_code)]
+    pub fn rotate_x(&mut self, theta: f64) {
+        self.transform(Matrix4::rotate_x(theta));
+    }
+
+    #[allow(dead_code)]
+    pub fn rotate_y(&mut self, theta: f64) {
+        self.transform(Matrix4::rotate_y(theta));
+    }
+
+    #[allow(dead_code)]
+    pub fn rotate_z(&mut self, theta: f64) {
+        self.transform(Matrix4::rotate_z(theta));
     }
 }
 

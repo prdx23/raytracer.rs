@@ -2,11 +2,13 @@ use std::fs;
 
 pub mod color;
 pub mod vector;
+pub mod matrix;
 pub mod ray;
 pub mod camera;
 
 pub use color::Color;
 pub use vector::Vec3;
+pub use matrix::Matrix4;
 pub use ray::Ray;
 pub use camera::Camera;
 
@@ -35,6 +37,7 @@ pub fn image_export(
         .expect("Unable to write image file");
 }
 
+#[allow(dead_code)]
 pub fn lerp(start: f64, end: f64, t: f64) -> f64 {
     (1.0 - t) * start + t * end
     // start + t * (end - start)

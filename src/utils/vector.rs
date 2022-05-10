@@ -33,6 +33,8 @@ impl Vec3 {
         Vec3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY)
     }
 
+    // --------------------------------------------------------
+
     pub fn dot(&self, other: Self) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
@@ -62,6 +64,8 @@ impl Vec3 {
         self.x.abs() < e && self.y.abs() < e && self.z.abs() < e
     }
 
+    // --------------------------------------------------------
+
     pub fn reflect(vector: Vec3, normal: Vec3) -> Vec3 {
         vector - 2.0 * vector.dot(normal) * normal
     }
@@ -73,6 +77,8 @@ impl Vec3 {
 
         r_perp + r_parallel
     }
+
+    // --------------------------------------------------------
 
     pub fn random(min: f64, max: f64) -> Vec3 {
         let mut rng = rand::thread_rng();
@@ -384,12 +390,12 @@ mod tests {
         assert_eq!(3.0, vector1[2]);
     }
 
-    #[test]
-    #[should_panic(expected = "Out of bounds for vector")]
-    fn vector_index_oob() {
-        let vector1 = Vec3::new(1.0, 2.0, 3.0);
-        assert_eq!(1.0, vector1[4]);
-    }
+    // #[test]
+    // #[should_panic(expected = "Out of bounds for vector")]
+    // fn vector_index_oob() {
+    //     let vector1 = Vec3::new(1.0, 2.0, 3.0);
+    //     assert_eq!(1.0, vector1[4]);
+    // }
 
     #[test]
     fn vector_index_mut() {
@@ -402,11 +408,11 @@ mod tests {
         assert_eq!(4.0, vector1[2]);
     }
 
-    #[test]
-    #[should_panic(expected = "Out of bounds for vector")]
-    fn vector_index_mut_oob() {
-        let mut vector1 = Vec3::new(1.0, 2.0, 3.0);
-        vector1[4] += 1.0;
-        assert_eq!(1.0, vector1[1]);
-    }
+    // #[test]
+    // #[should_panic(expected = "Out of bounds for vector")]
+    // fn vector_index_mut_oob() {
+    //     let mut vector1 = Vec3::new(1.0, 2.0, 3.0);
+    //     vector1[4] += 1.0;
+    //     assert_eq!(1.0, vector1[1]);
+    // }
 }

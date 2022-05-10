@@ -22,12 +22,12 @@ impl Metal {
         }.into()
     }
 
-    pub fn grey(fuzz: f64) -> Material {
-        Self {
-            albedo: Vec3::new(0.5, 0.5, 0.5),
-            fuzz: if fuzz < 1.0 { fuzz } else { 1.0 }
-        }.into()
-    }
+    // pub fn grey(fuzz: f64) -> Material {
+    //     Self {
+    //         albedo: Vec3::new(0.5, 0.5, 0.5),
+    //         fuzz: if fuzz < 1.0 { fuzz } else { 1.0 }
+    //     }.into()
+    // }
 }
 
 

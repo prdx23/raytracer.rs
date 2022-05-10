@@ -18,7 +18,7 @@ mod materials;
 mod scenes;
 
 
-use crate::utils::{ Color, Vec3, Ray, pretty_print_int };
+use crate::utils::{ Color, Vec3, Ray, Matrix4, pretty_print_int };
 use crate::behaviors::{ Intersect, Scatter };
 use crate::objects::{ Object, BvhNode };
 use crate::materials::Material;
@@ -37,8 +37,8 @@ pub fn raytrace() {
 
     // let (camera, materials, world) = scenes::spheres(ASPECT_RATIO, 0.3);
     // let (camera, materials, world) = scenes::meshtest(ASPECT_RATIO, 0.2);
-    // let (camera, materials, world) = scenes::teapot_with_lights(ASPECT_RATIO, 0.15);
-    let (camera, materials, world) = scenes::cubes(ASPECT_RATIO, 0.3);
+    let (camera, materials, world) = scenes::teapot_with_lights(ASPECT_RATIO, 0.15);
+    // let (camera, materials, world) = scenes::cubes(ASPECT_RATIO, 0.3);
     // println!("{:#?}", &world);
 
     let mut primitives: Vec<Object> = vec![];
