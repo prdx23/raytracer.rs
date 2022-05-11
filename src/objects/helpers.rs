@@ -87,7 +87,9 @@ pub fn from_obj(filename: String, mat: usize) -> Mesh {
     let mut not_trig_mesh = false;
 
     for line in txt.lines() {
-        let opts: Vec<&str> = line.split(" ").collect();
+        let opts: Vec<&str> = line.split(" ").filter(|x| *x != "").collect();
+        if opts.len() == 0 { continue; }
+
         match opts[0] {
             "v" => {
                 vertices.push(Vec3::new(
@@ -109,6 +111,8 @@ pub fn from_obj(filename: String, mat: usize) -> Mesh {
                 face_indexes.push(opts.len() - 1);
 
                 for i in 1..opts.len() {
+                    if opts[i] == "" { continue; }
+
                     let values: Vec<&str> = opts[i].split("/").collect();
                     let index: usize = values[0].parse().unwrap();
 
