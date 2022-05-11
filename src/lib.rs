@@ -37,8 +37,9 @@ pub fn raytrace() {
 
     // let (camera, materials, world) = scenes::spheres(ASPECT_RATIO, 0.3);
     // let (camera, materials, world) = scenes::meshtest(ASPECT_RATIO, 0.2);
-    let (camera, materials, world) = scenes::teapot_with_lights(ASPECT_RATIO, 0.15);
+    // let (camera, materials, world) = scenes::teapot_with_lights(ASPECT_RATIO, 0.15);
     // let (camera, materials, world) = scenes::cubes(ASPECT_RATIO, 0.3);
+    let (camera, materials, world) = scenes::cornell_box(ASPECT_RATIO, 0.0);
     // println!("{:#?}", &world);
 
     let mut primitives: Vec<Object> = vec![];
@@ -186,8 +187,8 @@ fn ray_color(
     }
 
     // Vec3::new(1.0, 1.0, 1.0)
-    Vec3::new(0.001, 0.001, 0.001)
-    // Vec3::zero()
+    // Vec3::new(0.001, 0.001, 0.001)
+    Vec3::zero()
     // let unit_direction = ray.direction().unit();
     // let t = 0.5 * (unit_direction.y + 1.0);
 

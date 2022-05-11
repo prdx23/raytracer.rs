@@ -34,8 +34,8 @@ impl Matrix4 {
     }
 
     pub fn rotate_x(theta: f64) -> Self {
-        let sin = theta.sin();
-        let cos = theta.cos();
+        let sin = theta.to_radians().sin();
+        let cos = theta.to_radians().cos();
         Self::new([
             [1.0, 0.0, 0.0, 0.0],
             [0.0, cos, -sin, 0.0],
@@ -44,8 +44,8 @@ impl Matrix4 {
     }
 
     pub fn rotate_y(theta: f64) -> Self {
-        let sin = theta.sin();
-        let cos = theta.cos();
+        let sin = theta.to_radians().sin();
+        let cos = theta.to_radians().cos();
         Self::new([
             [cos, 0.0, sin, 0.0],
             [0.0, 1.0, 0.0, 0.0],
@@ -54,8 +54,8 @@ impl Matrix4 {
     }
 
     pub fn rotate_z(theta: f64) -> Self {
-        let sin = theta.sin();
-        let cos = theta.cos();
+        let sin = theta.to_radians().sin();
+        let cos = theta.to_radians().cos();
         Self::new([
             [cos, -sin, 0.0, 0.0],
             [sin, cos, 0.0, 0.0],
