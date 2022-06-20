@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 
 use crate::Vec3;
 use crate::objects::Mesh;
@@ -77,7 +78,8 @@ pub fn cuboid(p: Vec3, l: f64, h: f64, b: f64, mat: usize) -> Mesh {
 
 pub fn from_obj(filename: String, mat: usize) -> Mesh {
 
-    let txt = fs::read_to_string(filename).expect("File not found!");
+    let txt = fs::read_to_string(Path::new(&filename))
+        .expect(format!("File not found! - {}", Path::new(&filename).display()).as_str());
 
     let mut vertices: Vec<Vec3> = vec![];
     let mut normals: Vec<Vec3> = vec![];

@@ -37,11 +37,11 @@ pub fn raytrace() {
 
     // let (camera, materials, world) = scenes::spheres(ASPECT_RATIO, 0.3);
     // let (camera, materials, world) = scenes::meshtest(ASPECT_RATIO, 0.2);
-    // let (camera, materials, world) = scenes::teapot_with_lights(ASPECT_RATIO, 0.15);
+    let (camera, materials, world) = scenes::teapot_with_lights(ASPECT_RATIO, 0.15);
     // let (camera, materials, world) = scenes::cubes(ASPECT_RATIO, 0.3);
     // let (camera, materials, world) = scenes::cornell_box(ASPECT_RATIO, 0.0);
     // let (camera, materials, world) = scenes::airplane(ASPECT_RATIO, 0.0);
-    let (camera, materials, world) = scenes::temple(ASPECT_RATIO, 6.0);
+    // let (camera, materials, world) = scenes::temple(ASPECT_RATIO, 6.0);
     // println!("{:#?}", &world);
 
     let mut primitives: Vec<Object> = vec![];
