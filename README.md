@@ -26,12 +26,14 @@ Helpful resources:
 - https://www.pbr-book.org/
 - https://www.realtimerendering.com/raytracing.html
 
-Renders:
-![teapot-4k-hd.png](renders/teapot-4k-hd.png)
-![cornell_box.png](renders/cornell_box.png)
-![spheres-dark.png](renders/spheres-dark.png)
-![spheres-light.png](renders/spheres-light.png)
-![cyberpunk-cubecity-lessdof.png](renders/cyberpunk-cubecity-lessdof.png)
-![cyberpunk-cubecity-neonsun.png](renders/cyberpunk-cubecity-neonsun.png)
-![temple_lessdof.png](renders/temple_lessdof.png)
+### Renders  
+Mirror: https://glitchcomet.com/projects/raytracer-renders  
+
+![teapot-4k-hd.png](renders/teapot-4k-hd.png)  
+![cornell_box.png](renders/cornell_box.png)  
+![spheres-dark.png](renders/spheres-dark.png)  
+![spheres-light.png](renders/spheres-light.png)  
+![cyberpunk-cubecity-lessdof.png](renders/cyberpunk-cubecity-lessdof.png)  
+![cyberpunk-cubecity-neonsun.png](renders/cyberpunk-cubecity-neonsun.png)  
+![temple_lessdof.png](renders/temple_lessdof.png)  
 
